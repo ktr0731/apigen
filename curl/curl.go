@@ -1,9 +1,12 @@
 package curl
 
 import (
+	"context"
+	"net/http"
 	"net/url"
 	"strings"
 
+	"github.com/k0kubun/pp"
 	"github.com/ktr0731/apigen"
 	"github.com/mattn/go-shellwords"
 	"github.com/morikuni/failure"
@@ -12,11 +15,14 @@ import (
 
 type flags struct {
 	headers    []string
+	request    string
 	compressed bool
 }
 
 type Command struct {
 	url *url.URL
+
+	flags *flags
 }
 
 func ParseCommand(cmd string) (*Command, error) {
@@ -32,6 +38,7 @@ func ParseCommand(cmd string) (*Command, error) {
 	var flags flags
 	fs := pflag.NewFlagSet("curl", pflag.ContinueOnError)
 	fs.StringArrayVarP(&flags.headers, "header", "H", nil, "")
+	fs.StringVarP(&flags.request, "request", "X", http.MethodGet, "")
 	fs.BoolVar(&flags.compressed, "compressed", false, "")
 
 	if err := fs.Parse(args); err != nil {
@@ -48,5 +55,24 @@ func ParseCommand(cmd string) (*Command, error) {
 		return nil, failure.New(apigen.ErrInvalidUsage, failure.Context{"url": fs.Arg(1)})
 	}
 
-	return &Command{url: u}, nil
+	return &Command{url: u, flags: &flags}, nil
+}
+
+func (c *Command) Request(ctx context.Context) (*http.Request, error) {
+	req, err := http.NewRequestWithContext(ctx, c.flags.request, c.url.String(), nil) // TODO
+	if err != nil {
+		return nil, failure.Translate(err, apigen.ErrInvalidUsage, failure.Context{"method": c.flags.request})
+	}
+
+	for _, val := range c.flags.headers {
+		sp := strings.SplitN(val, ":", 2)
+		k := strings.TrimSpace(sp[0])
+		for _, v := range strings.Split(sp[1], ";") {
+			req.Header.Add(k, strings.TrimSpace(v))
+		}
+	}
+
+	pp.Println(req.Header)
+
+	return req, nil
 }

@@ -1,6 +1,9 @@
 package curl
 
-import "testing"
+import (
+	"context"
+	"testing"
+)
 
 func TestParseCommand(t *testing.T) {
 	cmd, err := ParseCommand(in)
@@ -10,4 +13,6 @@ func TestParseCommand(t *testing.T) {
 	if cmd.url == nil {
 		t.Error("url should not be empty")
 	}
+
+	cmd.Request(context.Background())
 }
