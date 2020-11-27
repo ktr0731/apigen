@@ -51,8 +51,6 @@ func (g *Generator) Generate() error {
 		return failure.Wrap(err)
 	}
 
-	fmt.Println(out)
-
 	b, err := format.Source([]byte(out))
 	if err != nil {
 		return failure.Wrap(err)

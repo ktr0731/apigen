@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"strings"
+	"sort"
 
 	"github.com/morikuni/failure"
 )
@@ -35,7 +35,7 @@ func decodeJSONObject(o map[string]interface{}) *_struct {
 		switch field._type {
 		case typeStruct:
 			field.value = &definedStruct{
-				name:    strings.Title(k),
+				name:    public(k),
 				_struct: decodeJSONObject(v.(map[string]interface{})),
 			}
 		case typeSlice:
@@ -50,6 +50,10 @@ func decodeJSONObject(o map[string]interface{}) *_struct {
 
 		s.fields = append(s.fields, field)
 	}
+
+	sort.Slice(s.fields, func(i, j int) bool {
+		return s.fields[i].name < s.fields[j].name
+	})
 
 	return &s
 }
