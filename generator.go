@@ -8,22 +8,15 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/achiku/varfmt"
 	"github.com/morikuni/failure"
 )
-
-type method struct {
-	name string
-	req  *Request
-	res  *Response
-}
 
 type Generator struct {
 	writer         io.Writer
 	b              strings.Builder
 	err            error
 	errOnce        sync.Once
-	methods        []*method
+	methods        []*Method
 	definedStructs []*definedStruct
 }
 
@@ -31,8 +24,8 @@ func NewGenerator(w io.Writer) *Generator {
 	return &Generator{writer: w}
 }
 
-func (g *Generator) Add(name string, req *Request, res *Response) {
-	g.methods = append(g.methods, &method{name: name, req: req, res: res})
+func (g *Generator) Add(method *Method) {
+	g.methods = append(g.methods, method)
 }
 
 func (g *Generator) Generate() error {
@@ -43,6 +36,7 @@ func (g *Generator) Generate() error {
 	g._import("fmt")
 
 	for _, m := range g.methods {
+		g.typeStruct(m.req.name, m.req._struct)
 		g.typeStruct(m.res.name, m.res._struct)
 	}
 
@@ -146,5 +140,3 @@ func (g *Generator) gen() (string, error) {
 	}
 	return g.b.String(), nil
 }
-
-func public(s string) string { return varfmt.PublicVarName(s) }

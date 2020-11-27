@@ -45,7 +45,7 @@ type definedStruct struct {
 }
 
 type _struct struct {
-	fields []field
+	fields []*field
 }
 
 type slice struct {

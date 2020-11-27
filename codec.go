@@ -27,7 +27,7 @@ func (d *JSONDecoder) Decode(r io.Reader) (*_struct, error) {
 func decodeJSONObject(o map[string]interface{}) *_struct {
 	var s _struct
 	for k, v := range o {
-		field := field{
+		field := &field{
 			name:  k,
 			_type: detectJSONType(v),
 		}
