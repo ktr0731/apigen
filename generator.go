@@ -9,7 +9,6 @@ import (
 	"sync"
 
 	"github.com/iancoleman/strcase"
-	"github.com/k0kubun/pp"
 	"github.com/morikuni/failure"
 )
 
@@ -40,21 +39,21 @@ func (g *Generator) Generate() error {
 		g.typeInterface(name, methods)
 
 		g.definedType(&definedType{
-			tName: strcase.ToLowerCamel(name),
+			name: strcase.ToLowerCamel(name),
 			_type: &structType{
-				[]*structField{
-					{name: "httpClient", _type: &definedType{pkg: "net/http", tName: "Client"}},
+				fields: []*structField{
+					{name: "httpClient", _type: &definedType{pkg: "net/http", name: "Client"}},
 				},
 			},
 		})
 
 		for _, m := range methods {
 			g.definedType(&definedType{
-				tName: m.Name + "Request",
+				name:  m.Name + "Request",
 				_type: m.req,
 			})
 			g.definedType(&definedType{
-				tName: m.Name + "Response",
+				name:  m.Name + "Response",
 				_type: m.res,
 			})
 		}
@@ -109,7 +108,7 @@ func (g *Generator) definedType(t *definedType) {
 		return // Declared by another package.
 	}
 
-	g.wf("type %s %s\n", t.tName, t._type.name())
+	g.wf("type %s %s\n", t.name, t._type.String())
 
 	g.dependsTypes(t._type)
 }
@@ -124,8 +123,6 @@ func (g *Generator) dependsTypes(t _type) {
 		}
 	case *sliceType:
 		g.dependsTypes(v.elemType)
-	default:
-		pp.Printf("%T %s\n", v, v)
 	}
 }
 

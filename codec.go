@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net/url"
 	"sort"
 
 	"github.com/jinzhu/inflection"
@@ -59,12 +60,15 @@ func decodeJSONObject(o map[string]interface{}) *structType {
 		key := public(k)
 		field := &structField{
 			name: key,
+			tags: map[string][]string{
+				"json": {k, "omitempty"},
+			},
 		}
 
 		switch detectJSONType(v) {
 		case jsonTypeObject:
 			field._type = &definedType{
-				tName: key, // Type name is same as the field name.
+				name:  key, // Type name is same as the field name.
 				_type: decodeJSONObject(v.(map[string]interface{})),
 			}
 		case jsonTypeArray:
@@ -75,7 +79,7 @@ func decodeJSONObject(o map[string]interface{}) *structType {
 				field._type = &sliceType{
 					// Element type name is singular name of field name.
 					elemType: &definedType{
-						tName: inflection.Singular(key),
+						name:  inflection.Singular(key),
 						_type: t,
 					},
 				}
@@ -123,13 +127,21 @@ func detectJSONType(v interface{}) jsonType {
 	}
 }
 
-func detectJSONArrayElementType(arr []interface{}) jsonType {
-	if len(arr) == 0 {
-		return jsonTypeNull
+func structFromQuery(q url.Values) *structType {
+	var s structType
+	for k, v := range q {
+		field := &structField{
+			name: public(k),
+			tags: map[string][]string{
+				"json": {k, "omitempty"},
+			},
+		}
+		if len(v) == 1 {
+			field._type = typeString
+		} else {
+			field._type = &sliceType{elemType: typeString}
+		}
+		s.fields = append(s.fields, field)
 	}
-	return detectJSONType(arr[0])
-}
-
-type typeRegistry struct {
-	m map[string]_type
+	return &s
 }

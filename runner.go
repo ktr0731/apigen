@@ -3,10 +3,10 @@ package apigen
 import (
 	"context"
 	"net/http"
-	"net/url"
 	"path"
 
 	"github.com/iancoleman/strcase"
+	"github.com/k0kubun/pp"
 	"github.com/morikuni/failure"
 )
 
@@ -52,28 +52,14 @@ func (r *Runner) Run(ctx context.Context, req *http.Request) (*Method, error) {
 	var methReq *structType
 	switch req.Method {
 	case http.MethodGet:
-		methReq = reqStructFromQuery(req.URL.Query())
+		methReq = structFromQuery(req.URL.Query())
 	}
+
+	pp.Println(methRes)
 
 	return &Method{
 		Name: strcase.ToCamel(public(path.Base(req.URL.Path))),
 		req:  methReq,
 		res:  methRes,
 	}, nil
-}
-
-func reqStructFromQuery(q url.Values) *structType {
-	var s structType
-	for k, v := range q {
-		field := &structField{
-			name: public(k),
-		}
-		if len(v) == 1 {
-			field._type = typeString
-		} else {
-			field._type = &sliceType{elemType: typeString}
-		}
-		s.fields = append(s.fields, field)
-	}
-	return &s
 }

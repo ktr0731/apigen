@@ -3,6 +3,7 @@ package apigen
 import (
 	"fmt"
 	"path"
+	"strings"
 )
 
 var (
@@ -12,63 +13,78 @@ var (
 )
 
 type _type interface {
-	name() string
+	String() string
 	isBasic() bool
 }
 
 type basicType string
 
-func (t basicType) name() string  { return string(t) }
-func (t basicType) isBasic() bool { return true }
+func (t basicType) String() string { return string(t) }
+func (t basicType) isBasic() bool  { return true }
 
 type sliceType struct {
 	elemType _type
 }
 
-func (t *sliceType) isBasic() bool { return false }
-func (t *sliceType) name() string  { return fmt.Sprintf("[]%s", t.elemType.name()) }
+func (t *sliceType) isBasic() bool  { return false }
+func (t *sliceType) String() string { return fmt.Sprintf("[]%s", t.elemType.String()) }
 
 type structType struct {
 	fields []*structField
 }
 
 func (t *structType) isBasic() bool { return false }
-func (t *structType) name() string {
+func (t *structType) String() string {
 	s := "struct {\n"
 	for i := range t.fields {
-		s += fmt.Sprintf("%s %s\n", t.fields[i].name, t.fields[i]._type.name())
+		s += fmt.Sprintf("%s %s\n", t.fields[i].name, t.fields[i].String())
 	}
-	s += "}\n"
+	s += "}"
 	return s
 }
 
 type structField struct {
 	name  string
 	_type _type
+	tags  map[string][]string
+}
+
+func (f *structField) String() string {
+	s := f._type.String()
+
+	if len(f.tags) != 0 {
+		tags := make([]string, 0, len(f.tags))
+		for k, v := range f.tags {
+			tags = append(tags, fmt.Sprintf(`%s:"%s"`, k, strings.Join(v, ",")))
+		}
+		s += fmt.Sprintf(" `%s`", strings.Join(tags, " "))
+	}
+
+	return s
 }
 
 var emptyIfaceType = &_emptyIfaceType{}
 
 type _emptyIfaceType struct{}
 
-func (t *_emptyIfaceType) isBasic() bool { return false }
-func (t *_emptyIfaceType) name() string  { return "interface{}" }
+func (t *_emptyIfaceType) isBasic() bool  { return false }
+func (t *_emptyIfaceType) String() string { return "interface{}" }
 
 type externalType struct{}
 
-func (t *externalType) isBasic() bool { return false }
-func (t *externalType) name() string  { return "interface{}" }
+func (t *externalType) isBasic() bool  { return false }
+func (t *externalType) String() string { return "interface{}" }
 
 type definedType struct {
 	pkg   string
-	tName string
+	name  string
 	_type _type // Nil if pkg is not empty (declared by another package).
 }
 
 func (t *definedType) isBasic() bool { return false }
-func (t *definedType) name() string {
+func (t *definedType) String() string {
 	if t.pkg != "" {
-		return fmt.Sprintf("*%s.%s", path.Base(t.pkg), t.tName)
+		return fmt.Sprintf("*%s.%s", path.Base(t.pkg), t.name)
 	}
-	return fmt.Sprintf("*%s", t.tName)
+	return fmt.Sprintf("*%s", t.name)
 }
