@@ -6,6 +6,7 @@ import (
 	"io"
 	"sort"
 
+	"github.com/jinzhu/inflection"
 	"github.com/morikuni/failure"
 )
 
@@ -67,8 +68,17 @@ func decodeJSONObject(o map[string]interface{}) *structType {
 				_type: decodeJSONObject(v.(map[string]interface{})),
 			}
 		case jsonTypeArray:
-			field._type = &sliceType{
-				elemType: decodeJSONArray(v.([]interface{})),
+			t := decodeJSONArray(v.([]interface{}))
+			if t.elemType == emptyIfaceType {
+				field._type = t
+			} else {
+				field._type = &sliceType{
+					// Element type name is singular name of field name.
+					elemType: &definedType{
+						tName: inflection.Singular(key),
+						_type: t,
+					},
+				}
 			}
 		case jsonTypeBool:
 			field._type = typeBool
@@ -90,7 +100,7 @@ func decodeJSONObject(o map[string]interface{}) *structType {
 
 func decodeJSONArray(arr []interface{}) *sliceType {
 	if len(arr) == 0 {
-		return &sliceType{elemType: &emptyIfaceType{}}
+		return &sliceType{elemType: emptyIfaceType}
 	}
 
 	return &sliceType{elemType: decodeJSONType(arr[0])}

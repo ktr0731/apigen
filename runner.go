@@ -7,7 +7,6 @@ import (
 	"path"
 
 	"github.com/iancoleman/strcase"
-	"github.com/k0kubun/pp"
 	"github.com/morikuni/failure"
 )
 
@@ -49,8 +48,6 @@ func (r *Runner) Run(ctx context.Context, req *http.Request) (*Method, error) {
 	if err != nil {
 		return nil, failure.Wrap(err)
 	}
-
-	pp.Println(methRes)
 
 	var methReq *structType
 	switch req.Method {

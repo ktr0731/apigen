@@ -8,16 +8,17 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/iancoleman/strcase"
+	"github.com/k0kubun/pp"
 	"github.com/morikuni/failure"
 )
 
 type Generator struct {
-	writer         io.Writer
-	b              strings.Builder
-	err            error
-	errOnce        sync.Once
-	services       map[string][]*Method
-	definedStructs []*definedStruct
+	writer   io.Writer
+	b        strings.Builder
+	err      error
+	errOnce  sync.Once
+	services map[string][]*Method
 }
 
 func NewGenerator(w io.Writer) *Generator {
@@ -38,9 +39,24 @@ func (g *Generator) Generate() error {
 	for name, methods := range g.services {
 		g.typeInterface(name, methods)
 
+		g.definedType(&definedType{
+			tName: strcase.ToLowerCamel(name),
+			_type: &structType{
+				[]*structField{
+					{name: "httpClient", _type: &definedType{pkg: "net/http", tName: "Client"}},
+				},
+			},
+		})
+
 		for _, m := range methods {
-			g.typeStruct(m.Name+"Request", m.req)
-			g.typeStruct(m.Name+"Response", m.res)
+			g.definedType(&definedType{
+				tName: m.Name + "Request",
+				_type: m.req,
+			})
+			g.definedType(&definedType{
+				tName: m.Name + "Response",
+				_type: m.res,
+			})
 		}
 	}
 
@@ -48,6 +64,8 @@ func (g *Generator) Generate() error {
 	if err != nil {
 		return failure.Wrap(err)
 	}
+
+	fmt.Println(out)
 
 	b, err := format.Source([]byte(out))
 	if err != nil {
@@ -86,38 +104,29 @@ func (g *Generator) typeInterface(name string, methods []*Method) {
 	g.w("")
 }
 
-func (g *Generator) typeStruct(name string, s *_struct) {
-	var depStructs []*definedStruct
-	g.wf("type %s struct {", name)
-	for _, f := range s.fields {
-		switch {
-		case f._type.isBasic():
-			g.wf("%s %s", public(f.name), f._type)
-		case f._type == typeStruct:
-			v := f.value.(*definedStruct)
-			g.wf("%s *%s", public(f.name), v.name) // FieldName is same as f.name.
-			depStructs = append(depStructs, v)
-		}
+func (g *Generator) definedType(t *definedType) {
+	if t.pkg != "" {
+		return // Declared by another package.
 	}
-	g.w("}")
-	g.w("")
 
-	for i := range depStructs {
-		g.typeStruct(depStructs[i].name, depStructs[i]._struct)
-	}
+	g.wf("type %s %s\n", t.tName, t._type.name())
+
+	g.dependsTypes(t._type)
 }
 
-func (g *Generator) structField(name string, s *_struct) {
-	g.wf("%s struct {", public(name))
-	for _, f := range s.fields {
-		switch {
-		case f._type.isBasic():
-			g.wf("%s %s", public(f.name), f._type)
-		case f._type == typeStruct:
-			g.structField(f.name, f.value.(*_struct))
+func (g *Generator) dependsTypes(t _type) {
+	switch v := t.(type) {
+	case *definedType:
+		g.definedType(v)
+	case *structType:
+		for _, f := range v.fields {
+			g.dependsTypes(f._type)
 		}
+	case *sliceType:
+		g.dependsTypes(v.elemType)
+	default:
+		pp.Printf("%T %s\n", v, v)
 	}
-	g.w("}")
 }
 
 func (g *Generator) w(s string) {

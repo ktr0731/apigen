@@ -47,10 +47,12 @@ type structField struct {
 	_type _type
 }
 
-type emptyIfaceType struct{}
+var emptyIfaceType = &_emptyIfaceType{}
 
-func (t *emptyIfaceType) isBasic() bool { return false }
-func (t *emptyIfaceType) name() string  { return "interface{}" }
+type _emptyIfaceType struct{}
+
+func (t *_emptyIfaceType) isBasic() bool { return false }
+func (t *_emptyIfaceType) name() string  { return "interface{}" }
 
 type externalType struct{}
 
