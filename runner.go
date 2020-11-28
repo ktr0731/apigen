@@ -7,6 +7,7 @@ import (
 	"path"
 
 	"github.com/iancoleman/strcase"
+	"github.com/k0kubun/pp"
 	"github.com/morikuni/failure"
 )
 
@@ -33,8 +34,8 @@ func NewRunner(opts ...Option) *Runner {
 
 type Method struct {
 	Name string
-	req  *_struct
-	res  *_struct
+	req  *structType
+	res  *structType
 }
 
 func (r *Runner) Run(ctx context.Context, req *http.Request) (*Method, error) {
@@ -49,7 +50,9 @@ func (r *Runner) Run(ctx context.Context, req *http.Request) (*Method, error) {
 		return nil, failure.Wrap(err)
 	}
 
-	var methReq *_struct
+	pp.Println(methRes)
+
+	var methReq *structType
 	switch req.Method {
 	case http.MethodGet:
 		methReq = reqStructFromQuery(req.URL.Query())
@@ -62,17 +65,16 @@ func (r *Runner) Run(ctx context.Context, req *http.Request) (*Method, error) {
 	}, nil
 }
 
-func reqStructFromQuery(q url.Values) *_struct {
-	var s _struct
+func reqStructFromQuery(q url.Values) *structType {
+	var s structType
 	for k, v := range q {
-		field := &field{
-			name:  public(k),
-			value: v,
+		field := &structField{
+			name: public(k),
 		}
 		if len(v) == 1 {
 			field._type = typeString
 		} else {
-			field._type = typeSlice
+			field._type = &sliceType{elemType: typeString}
 		}
 		s.fields = append(s.fields, field)
 	}

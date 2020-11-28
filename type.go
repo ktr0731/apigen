@@ -1,54 +1,72 @@
 package apigen
 
-type _type string
-
-func (t _type) isBasic() bool {
-	switch t {
-	case typeBool, typeString, typeFloat64:
-		return true
-	default:
-		return false
-	}
-}
-
-const (
-	typeBool   _type = "bool"
-	typeString _type = "string"
-	typeInt    _type = "int"
-	typeInt8   _type = "int8"
-	typeInt16  _type = "int16"
-	typeInt32  _type = "int32"
-	typeInt64  _type = "int64"
-	typeUint   _type = "uint"
-	typeUint8  _type = "uint8"
-	typeUint16 _type = "uint16"
-	typeUint32 _type = "uint32"
-	typeUint64 _type = "uint64"
-
-	typeFloat   _type = "float"
-	typeFloat64 _type = "float64"
-
-	typeStruct _type = "struct"
-	typeArray  _type = "array"
-	typeSlice  _type = "slice"
+import (
+	"fmt"
+	"path"
 )
 
-type field struct {
+var (
+	typeBool    _type = basicType("bool")
+	typeString  _type = basicType("string")
+	typeFloat64 _type = basicType("float64")
+)
+
+type _type interface {
+	name() string
+	isBasic() bool
+}
+
+type basicType string
+
+func (t basicType) name() string  { return string(t) }
+func (t basicType) isBasic() bool { return true }
+
+type sliceType struct {
+	elemType _type
+}
+
+func (t *sliceType) isBasic() bool { return false }
+func (t *sliceType) name() string  { return fmt.Sprintf("[]%s", t.elemType.name()) }
+
+type structType struct {
+	fields []*structField
+}
+
+func (t *structType) isBasic() bool { return false }
+func (t *structType) name() string {
+	s := "struct {\n"
+	for i := range t.fields {
+		s += fmt.Sprintf("%s %s\n", t.fields[i].name, t.fields[i]._type.name())
+	}
+	s += "}\n"
+	return s
+}
+
+type structField struct {
 	name  string
 	_type _type
-	value interface{}
 }
 
-type definedStruct struct {
-	name    string
-	_struct *_struct
+type emptyIfaceType struct{}
+
+func (t *emptyIfaceType) isBasic() bool { return false }
+func (t *emptyIfaceType) name() string  { return "interface{}" }
+
+type externalType struct{}
+
+func (t *externalType) isBasic() bool { return false }
+func (t *externalType) name() string  { return "interface{}" }
+
+type definedType struct {
+	pkg   string
+	tName string
+	_type _type // Nil if pkg is not empty (declared by another package).
 }
 
-type _struct struct {
-	fields []*field
-}
-
-type slice struct {
-	_type _type
-	elems []interface{}
+func (t *definedType) isBasic() bool { return false }
+func (t *definedType) name() string {
+	if t.pkg != "" {
+		return fmt.Sprintf("*%s.%s", path.Base(t.pkg), t.tName)
+	}
+	return fmt.Sprintf("*%s", t.tName)
 }

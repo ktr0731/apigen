@@ -9,13 +9,24 @@ import (
 	"github.com/morikuni/failure"
 )
 
+type jsonType int
+
+const (
+	jsonTypeNull jsonType = iota
+	jsonTypeBool
+	jsonTypeNumber
+	jsonTypeString
+	jsonTypeArray
+	jsonTypeObject
+)
+
 type Decoder interface {
-	Decode(io.Reader) (*_struct, error)
+	Decode(io.Reader) (*structType, error)
 }
 
 type JSONDecoder struct{}
 
-func (d *JSONDecoder) Decode(r io.Reader) (*_struct, error) {
+func (d *JSONDecoder) Decode(r io.Reader) (*structType, error) {
 	v := make(map[string]interface{})
 	if err := json.NewDecoder(r).Decode(&v); err != nil {
 		return nil, failure.Wrap(err)
@@ -24,28 +35,47 @@ func (d *JSONDecoder) Decode(r io.Reader) (*_struct, error) {
 	return decodeJSONObject(v), nil
 }
 
-func decodeJSONObject(o map[string]interface{}) *_struct {
-	var s _struct
+func decodeJSONType(v interface{}) _type {
+	switch detectJSONType(v) {
+	case jsonTypeObject:
+		return decodeJSONObject(v.(map[string]interface{}))
+	case jsonTypeArray:
+		return decodeJSONArray(v.([]interface{}))
+	case jsonTypeBool:
+		return typeBool
+	case jsonTypeString:
+		return typeString
+	case jsonTypeNumber:
+		return typeFloat64
+	default:
+		panic("unreachable")
+	}
+}
+
+func decodeJSONObject(o map[string]interface{}) *structType {
+	var s structType
 	for k, v := range o {
-		field := &field{
-			name:  k,
-			_type: detectJSONType(v),
+		key := public(k)
+		field := &structField{
+			name: key,
 		}
 
-		switch field._type {
-		case typeStruct:
-			field.value = &definedStruct{
-				name:    public(k),
-				_struct: decodeJSONObject(v.(map[string]interface{})),
+		switch detectJSONType(v) {
+		case jsonTypeObject:
+			field._type = &definedType{
+				tName: key, // Type name is same as the field name.
+				_type: decodeJSONObject(v.(map[string]interface{})),
 			}
-		case typeSlice:
-			field.value = decodeJSONArray(v.([]interface{}))
-		case typeBool:
-			field.value = v
-		case typeString:
-			field.value = v
-		case typeFloat64:
-			field.value = v
+		case jsonTypeArray:
+			field._type = &sliceType{
+				elemType: decodeJSONArray(v.([]interface{})),
+			}
+		case jsonTypeBool:
+			field._type = typeBool
+		case jsonTypeString:
+			field._type = typeString
+		case jsonTypeNumber:
+			field._type = typeFloat64
 		}
 
 		s.fields = append(s.fields, field)
@@ -58,47 +88,38 @@ func decodeJSONObject(o map[string]interface{}) *_struct {
 	return &s
 }
 
-func decodeJSONArray(array []interface{}) *slice {
-	if len(array) == 0 {
-		return nil
+func decodeJSONArray(arr []interface{}) *sliceType {
+	if len(arr) == 0 {
+		return &sliceType{elemType: &emptyIfaceType{}}
 	}
 
-	slice := &slice{
-		_type: detectJSONType(array[0]),
-		elems: make([]interface{}, 0, len(array)),
-	}
-
-	for _, v := range array {
-		switch slice._type {
-		case typeStruct:
-			slice.elems = append(slice.elems, decodeJSONObject(v.(map[string]interface{})))
-		case typeSlice:
-			slice.elems = append(slice.elems, decodeJSONArray(v.([]interface{})))
-		case typeBool:
-			slice.elems = append(slice.elems, v)
-		case typeString:
-			slice.elems = append(slice.elems, v)
-		case typeFloat64:
-			slice.elems = append(slice.elems, v)
-		}
-	}
-
-	return slice
+	return &sliceType{elemType: decodeJSONType(arr[0])}
 }
 
-func detectJSONType(v interface{}) _type {
+func detectJSONType(v interface{}) jsonType {
 	switch cv := v.(type) {
 	case map[string]interface{}:
-		return typeStruct
+		return jsonTypeObject
 	case []interface{}:
-		return typeSlice
+		return jsonTypeArray
 	case bool:
-		return typeBool
+		return jsonTypeBool
 	case string:
-		return typeString
+		return jsonTypeString
 	case float64:
-		return typeFloat64
+		return jsonTypeNumber
 	default:
 		panic(fmt.Sprintf("unknown type: %T", cv))
 	}
+}
+
+func detectJSONArrayElementType(arr []interface{}) jsonType {
+	if len(arr) == 0 {
+		return jsonTypeNull
+	}
+	return detectJSONType(arr[0])
+}
+
+type typeRegistry struct {
+	m map[string]_type
 }
