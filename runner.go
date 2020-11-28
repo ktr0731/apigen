@@ -6,7 +6,6 @@ import (
 	"path"
 
 	"github.com/iancoleman/strcase"
-	"github.com/k0kubun/pp"
 	"github.com/morikuni/failure"
 )
 
@@ -32,9 +31,11 @@ func NewRunner(opts ...Option) *Runner {
 }
 
 type Method struct {
-	Name string
-	req  *structType
-	res  *structType
+	Name   string
+	method string
+	url    string
+	req    *structType
+	res    *structType
 }
 
 func (r *Runner) Run(ctx context.Context, req *http.Request) (*Method, error) {
@@ -55,11 +56,13 @@ func (r *Runner) Run(ctx context.Context, req *http.Request) (*Method, error) {
 		methReq = structFromQuery(req.URL.Query())
 	}
 
-	pp.Println(methRes)
-
+	u := req.URL
+	u.RawQuery = ""
 	return &Method{
-		Name: strcase.ToCamel(public(path.Base(req.URL.Path))),
-		req:  methReq,
-		res:  methRes,
+		Name:   strcase.ToCamel(public(path.Base(req.URL.Path))),
+		method: req.Method,
+		url:    u.String(),
+		req:    methReq,
+		res:    methRes,
 	}, nil
 }

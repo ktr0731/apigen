@@ -6,7 +6,6 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/k0kubun/pp"
 	"github.com/ktr0731/apigen"
 	"github.com/mattn/go-shellwords"
 	"github.com/morikuni/failure"
@@ -59,6 +58,10 @@ func ParseCommand(cmd string) (*Command, error) {
 }
 
 func (c *Command) Request(ctx context.Context) (*http.Request, error) {
+	if c.flags.request != http.MethodGet && c.flags.request != http.MethodPost {
+		return nil, failure.New(apigen.ErrInvalidUsage, failure.Message("unsupported method"))
+	}
+
 	req, err := http.NewRequestWithContext(ctx, c.flags.request, c.url.String(), nil) // TODO
 	if err != nil {
 		return nil, failure.Translate(err, apigen.ErrInvalidUsage, failure.Context{"method": c.flags.request})
@@ -66,13 +69,8 @@ func (c *Command) Request(ctx context.Context) (*http.Request, error) {
 
 	for _, val := range c.flags.headers {
 		sp := strings.SplitN(val, ":", 2)
-		k := strings.TrimSpace(sp[0])
-		for _, v := range strings.Split(sp[1], ";") {
-			req.Header.Add(k, strings.TrimSpace(v))
-		}
+		req.Header.Add(strings.TrimSpace(sp[0]), strings.TrimSpace(sp[1]))
 	}
-
-	pp.Println(req.Header)
 
 	return req, nil
 }

@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"go/format"
 	"io"
+	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -12,20 +14,35 @@ import (
 	"github.com/morikuni/failure"
 )
 
+type GeneratorOption func(*Generator)
+
 type Generator struct {
 	writer   io.Writer
 	b        strings.Builder
 	err      error
 	errOnce  sync.Once
+	headers  http.Header
 	services map[string][]*Method
 }
 
 func NewGenerator(w io.Writer) *Generator {
-	return &Generator{writer: w, services: make(map[string][]*Method)}
+	return &Generator{writer: w, headers: make(http.Header), services: make(map[string][]*Method)}
 }
 
-func (g *Generator) Add(service string, method *Method) {
+func (g *Generator) AddMethod(service string, method *Method) {
 	g.services[service] = append(g.services[service], method)
+}
+
+var allowedHeaders = map[string]struct{}{
+	"Cookie":     struct{}{},
+	"Origin":     struct{}{},
+	"User-Agent": struct{}{},
+}
+
+func (g *Generator) AddHeader(k, v string) {
+	if _, found := allowedHeaders[k]; found {
+		g.headers.Add(k, v)
+	}
 }
 
 func (g *Generator) Generate() error {
@@ -33,19 +50,57 @@ func (g *Generator) Generate() error {
 	g.comment("github.com/ktr0731/apigen")
 	g.w("")
 	g._package("main")
-	g._import("context")
+	g._import("context", "net/http", "net/url", "github.com/ktr0731/apigen/client")
 
 	for name, methods := range g.services {
 		g.typeInterface(name, methods)
 
+		implName := strcase.ToLowerCamel(name)
 		g.definedType(&definedType{
-			name: strcase.ToLowerCamel(name),
+			name: implName,
 			_type: &structType{
 				fields: []*structField{
-					{name: "httpClient", _type: &definedType{pkg: "net/http", name: "Client"}},
+					{
+						_type: &definedType{
+							pkg:     "github.com/ktr0731/apigen/client",
+							name:    "Client",
+							pointer: true,
+						},
+					},
 				},
 			},
 		})
+
+		g.function(
+			&function{
+				name: fmt.Sprintf("New%s", public(name)),
+				args: args{{
+					name: "opts",
+					_type: &definedType{
+						pkg:  "github.com/ktr0731/apigen/client",
+						name: "Option",
+					},
+					variadic: true,
+				}},
+				retVals: retVals{{_type: &definedType{name: fmt.Sprintf("%s", public(name))}}},
+			},
+			func() {
+				g.w("headers := make(http.Header)")
+				s := make([]string, 0, len(g.headers))
+				for k, v := range g.headers {
+					for _, vv := range v {
+						s = append(s, fmt.Sprintf("headers.Add(%q, %q)", k, vv))
+					}
+				}
+				sort.Slice(s, func(i, j int) bool { return s[i] < s[j] })
+				g.w(strings.Join(s, "\n"))
+				g.wf("return &%s{Client: client.New(append(opts, client.WithHeaders(headers))...)}", strcase.ToLowerCamel(name))
+			},
+		)
+
+		for _, m := range methods {
+			g.method(implName, m)
+		}
 
 		for _, m := range methods {
 			g.definedType(&definedType{
@@ -63,8 +118,6 @@ func (g *Generator) Generate() error {
 	if err != nil {
 		return failure.Wrap(err)
 	}
-
-	fmt.Println(out)
 
 	b, err := format.Source([]byte(out))
 	if err != nil {
@@ -103,6 +156,20 @@ func (g *Generator) typeInterface(name string, methods []*Method) {
 	g.w("")
 }
 
+func (g *Generator) method(recv string, m *Method) {
+	g.wf("func (c *%s) %s(ctx context.Context, req *%s) (*%s, error) {", recv, m.Name, m.Name+"Request", m.Name+"Response")
+	g.wf(`u, err := url.Parse(%q)`, m.url)
+	g.w("if err != nil {")
+	g.w("return nil, err")
+	g.w("}")
+	g.w("")
+	g.wf("var res %s", m.Name+"Response")
+	g.wf("err = c.Do(ctx, %q, u, req, &res)", m.method)
+	g.w("return &res, err")
+	g.w("}")
+	g.w("")
+}
+
 func (g *Generator) definedType(t *definedType) {
 	if t.pkg != "" {
 		return // Declared by another package.
@@ -124,6 +191,13 @@ func (g *Generator) dependsTypes(t _type) {
 	case *sliceType:
 		g.dependsTypes(v.elemType)
 	}
+}
+
+func (g *Generator) function(f *function, fn func()) {
+	g.wf("func %s(%s) %s {", f.name, f.args, f.retVals)
+	fn()
+	g.w("}")
+	g.w("")
 }
 
 func (g *Generator) w(s string) {
@@ -158,4 +232,55 @@ func (g *Generator) gen() (string, error) {
 		return "", g.err
 	}
 	return g.b.String(), nil
+}
+
+type arg struct {
+	name     string
+	_type    _type
+	variadic bool
+}
+
+type args []*arg
+
+func (args args) String() string {
+	as := make([]string, 0, len(args))
+	for i, a := range args {
+		s := a.name
+		if i+1 == len(args) && a.variadic {
+			s += fmt.Sprintf(" ...%s", a._type.String())
+		} else {
+			s += fmt.Sprintf(" %s", a._type.String())
+		}
+		as = append(as, s)
+	}
+
+	return strings.Join(as, ", ")
+}
+
+type retVal struct {
+	_type _type
+}
+
+type retVals []*retVal
+
+func (vals retVals) String() string {
+	if len(vals) == 0 {
+		return ""
+	}
+
+	vs := make([]string, 0, len(vals))
+	for _, v := range vals {
+		vs = append(vs, v._type.String())
+	}
+
+	if len(vals) > 1 {
+		return fmt.Sprintf("(%s)", strings.Join(vs, ", "))
+	}
+	return strings.Join(vs, ", ")
+}
+
+type function struct {
+	name    string
+	args    args
+	retVals retVals
 }

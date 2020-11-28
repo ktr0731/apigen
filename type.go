@@ -37,20 +37,23 @@ func (t *structType) isBasic() bool { return false }
 func (t *structType) String() string {
 	s := "struct {\n"
 	for i := range t.fields {
-		s += fmt.Sprintf("%s %s\n", t.fields[i].name, t.fields[i].String())
+		s += fmt.Sprintf("%s\n", t.fields[i].String())
 	}
 	s += "}"
 	return s
 }
 
 type structField struct {
-	name  string
+	name  string // Means embeded field if name is empty.
 	_type _type
 	tags  map[string][]string
 }
 
 func (f *structField) String() string {
 	s := f._type.String()
+	if f.name != "" {
+		s = fmt.Sprintf("%s %s", f.name, s)
+	}
 
 	if len(f.tags) != 0 {
 		tags := make([]string, 0, len(f.tags))
@@ -76,15 +79,22 @@ func (t *externalType) isBasic() bool  { return false }
 func (t *externalType) String() string { return "interface{}" }
 
 type definedType struct {
-	pkg   string
-	name  string
-	_type _type // Nil if pkg is not empty (declared by another package).
+	pkg     string
+	name    string
+	pointer bool
+	_type   _type // Nil if pkg is empty (declared by another package).
 }
 
 func (t *definedType) isBasic() bool { return false }
 func (t *definedType) String() string {
+	var s string
 	if t.pkg != "" {
-		return fmt.Sprintf("*%s.%s", path.Base(t.pkg), t.name)
+		s = fmt.Sprintf("%s.%s", path.Base(t.pkg), t.name)
+	} else {
+		s = t.name
 	}
-	return fmt.Sprintf("*%s", t.name)
+	if t.pointer {
+		s = "*" + s
+	}
+	return s
 }

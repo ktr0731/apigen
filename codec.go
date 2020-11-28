@@ -39,6 +39,8 @@ func (d *JSONDecoder) Decode(r io.Reader) (*structType, error) {
 
 func decodeJSONType(v interface{}) _type {
 	switch detectJSONType(v) {
+	case jsonTypeNull:
+		return emptyIfaceType
 	case jsonTypeObject:
 		return decodeJSONObject(v.(map[string]interface{}))
 	case jsonTypeArray:
@@ -60,16 +62,17 @@ func decodeJSONObject(o map[string]interface{}) *structType {
 		key := public(k)
 		field := &structField{
 			name: key,
-			tags: map[string][]string{
-				"json": {k, "omitempty"},
-			},
+			tags: map[string][]string{"json": {k, "omitempty"}},
 		}
 
 		switch detectJSONType(v) {
+		case jsonTypeNull:
+			field._type = emptyIfaceType
 		case jsonTypeObject:
 			field._type = &definedType{
-				name:  key, // Type name is same as the field name.
-				_type: decodeJSONObject(v.(map[string]interface{})),
+				name:    key, // Type name is same as the field name.
+				pointer: true,
+				_type:   decodeJSONObject(v.(map[string]interface{})),
 			}
 		case jsonTypeArray:
 			t := decodeJSONArray(v.([]interface{}))
@@ -79,8 +82,9 @@ func decodeJSONObject(o map[string]interface{}) *structType {
 				field._type = &sliceType{
 					// Element type name is singular name of field name.
 					elemType: &definedType{
-						name:  inflection.Singular(key),
-						_type: t,
+						name:    inflection.Singular(key),
+						pointer: true,
+						_type:   t.elemType,
 					},
 				}
 			}
@@ -112,6 +116,8 @@ func decodeJSONArray(arr []interface{}) *sliceType {
 
 func detectJSONType(v interface{}) jsonType {
 	switch cv := v.(type) {
+	case nil:
+		return jsonTypeNull
 	case map[string]interface{}:
 		return jsonTypeObject
 	case []interface{}:
@@ -132,10 +138,7 @@ func structFromQuery(q url.Values) *structType {
 	for k, v := range q {
 		field := &structField{
 			name: public(k),
-			tags: map[string][]string{
-				"json": {k, "omitempty"},
-			},
-		}
+			tags: map[string][]string{"name": {k}}}
 		if len(v) == 1 {
 			field._type = typeString
 		} else {
