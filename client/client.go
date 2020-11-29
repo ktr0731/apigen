@@ -15,7 +15,7 @@ var defaultClient = Client{
 
 type Client struct {
 	httpClient *http.Client
-	headers    http.Header
+	ints       []Interceptor
 }
 
 func New(opts ...Option) *Client {
@@ -47,13 +47,20 @@ func (c *Client) Do(
 		return err
 	}
 
-	for k, v := range c.headers {
-		for _, vv := range v {
-			hreq.Header.Add(k, vv)
+	chainedHandler := func(ctx context.Context, req *http.Request) (*http.Response, error) {
+		return c.httpClient.Do(req.WithContext(ctx))
+	}
+	chainer := func(i Interceptor, h Handler) Handler {
+		return func(ctx context.Context, req *http.Request) (*http.Response, error) {
+			return i(ctx, req.WithContext(ctx), h)
 		}
 	}
 
-	hres, err := c.httpClient.Do(hreq)
+	for i := len(c.ints) - 1; i >= 0; i-- {
+		chainedHandler = chainer(c.ints[i], chainedHandler)
+	}
+
+	hres, err := chainedHandler(ctx, hreq)
 	if err != nil {
 		return err
 	}

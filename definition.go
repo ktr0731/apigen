@@ -24,7 +24,7 @@ func (d *Definition) validate() error {
 			return fmt.Errorf("method name '%s' should satisfy identifier name spec: %w", m.Method, ErrInvalidDefinition)
 		}
 		if m.Request == nil {
-			return fmt.Errorf("Request field should not be nil: %w", ErrInvalidDefinition)
+			return fmt.Errorf("field Request should not be nil: %w", ErrInvalidDefinition)
 		}
 	}
 

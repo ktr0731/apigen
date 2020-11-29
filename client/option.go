@@ -12,8 +12,8 @@ func WithHTTPClient(c *http.Client) Option {
 	}
 }
 
-func WithHeaders(h http.Header) Option {
+func WithInterceptors(ints ...Interceptor) Option {
 	return func(client *Client) {
-		client.headers = h
+		client.ints = append(client.ints, ints...)
 	}
 }
