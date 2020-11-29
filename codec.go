@@ -7,7 +7,6 @@ import (
 	"net/url"
 	"sort"
 
-	"github.com/jinzhu/inflection"
 	"github.com/morikuni/failure"
 )
 
@@ -69,25 +68,9 @@ func decodeJSONObject(o map[string]interface{}) *structType {
 		case jsonTypeNull:
 			field._type = emptyIfaceType
 		case jsonTypeObject:
-			field._type = &definedType{
-				name:    key, // Type name is same as the field name.
-				pointer: true,
-				_type:   decodeJSONObject(v.(map[string]interface{})),
-			}
+			field._type = decodeJSONObject(v.(map[string]interface{}))
 		case jsonTypeArray:
-			t := decodeJSONArray(v.([]interface{}))
-			if t.elemType == emptyIfaceType {
-				field._type = t
-			} else {
-				field._type = &sliceType{
-					// Element type name is singular name of field name.
-					elemType: &definedType{
-						name:    inflection.Singular(key),
-						pointer: true,
-						_type:   t.elemType,
-					},
-				}
-			}
+			field._type = decodeJSONArray(v.([]interface{}))
 		case jsonTypeBool:
 			field._type = typeBool
 		case jsonTypeString:
