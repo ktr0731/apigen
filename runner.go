@@ -33,8 +33,8 @@ func NewRunner(opts ...Option) *Runner {
 
 type Method struct {
 	Name string
-	req  *definedStruct
-	res  *definedStruct
+	req  *_struct
+	res  *_struct
 }
 
 func (r *Runner) Run(ctx context.Context, req *http.Request) (*Method, error) {
@@ -44,21 +44,21 @@ func (r *Runner) Run(ctx context.Context, req *http.Request) (*Method, error) {
 	}
 	defer res.Body.Close()
 
-	out, err := r.decoder.Decode(res.Body)
+	methRes, err := r.decoder.Decode(res.Body)
 	if err != nil {
 		return nil, failure.Wrap(err)
 	}
 
-	methReq := &definedStruct{name: "Request"}
+	var methReq *_struct
 	switch req.Method {
 	case http.MethodGet:
-		methReq._struct = reqStructFromQuery(req.URL.Query())
+		methReq = reqStructFromQuery(req.URL.Query())
 	}
 
 	return &Method{
 		Name: strcase.ToCamel(public(path.Base(req.URL.Path))),
 		req:  methReq,
-		res:  &definedStruct{name: "Response", _struct: out},
+		res:  methRes,
 	}, nil
 }
 

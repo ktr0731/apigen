@@ -16,16 +16,16 @@ type Generator struct {
 	b              strings.Builder
 	err            error
 	errOnce        sync.Once
-	methods        []*Method
+	services       map[string][]*Method
 	definedStructs []*definedStruct
 }
 
 func NewGenerator(w io.Writer) *Generator {
-	return &Generator{writer: w}
+	return &Generator{writer: w, services: make(map[string][]*Method)}
 }
 
-func (g *Generator) Add(method *Method) {
-	g.methods = append(g.methods, method)
+func (g *Generator) Add(service string, method *Method) {
+	g.services[service] = append(g.services[service], method)
 }
 
 func (g *Generator) Generate() error {
@@ -33,11 +33,15 @@ func (g *Generator) Generate() error {
 	g.comment("github.com/ktr0731/apigen")
 	g.w("")
 	g._package("main")
-	g._import("fmt")
+	g._import("context")
 
-	for _, m := range g.methods {
-		g.typeStruct(m.req.name, m.req._struct)
-		g.typeStruct(m.res.name, m.res._struct)
+	for name, methods := range g.services {
+		g.typeInterface(name, methods)
+
+		for _, m := range methods {
+			g.typeStruct(m.Name+"Request", m.req)
+			g.typeStruct(m.Name+"Response", m.res)
+		}
 	}
 
 	out, err := g.gen()
@@ -71,6 +75,15 @@ func (g *Generator) _import(paths ...string) {
 		g.w(strconv.Quote(path))
 	}
 	g.w(")")
+}
+
+func (g *Generator) typeInterface(name string, methods []*Method) {
+	g.wf("type %s interface{", name)
+	for _, m := range methods {
+		g.wf("%s(ctx context.Context, req *%s) (*%s, error)", m.Name, m.Name+"Request", m.Name+"Response")
+	}
+	g.w("}")
+	g.w("")
 }
 
 func (g *Generator) typeStruct(name string, s *_struct) {
