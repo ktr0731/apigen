@@ -43,52 +43,48 @@ func (r *runner) run(ctx context.Context, def *Definition) error {
 
 	eg, cctx := errgroup.WithContext(ctx)
 
-	for _, m := range def.Methods {
-		req, err := m.Request(cctx)
-		if err != nil {
-			return failure.Wrap(err)
-		}
-
-		m := m
-
-		eg.Go(func() error {
-			res, err := r.client.Do(req)
-			if err != nil {
-				return failure.Wrap(err)
-			}
-			defer res.Body.Close()
-
-			methRes, err := r.decoder.Decode(res.Body)
+	for service, methods := range def.Services {
+		for _, m := range methods {
+			req, err := m.Request(cctx)
 			if err != nil {
 				return failure.Wrap(err)
 			}
 
-			var methReq _type
-			switch req.Method {
-			case http.MethodGet:
-				methReq = structFromQuery(req.URL.Query())
-			default:
-				panic("not implemnted yet")
-			}
+			m := m
 
-			for k, v := range req.Header {
-				for _, vv := range v {
-					gen.addHeader(k, vv)
+			eg.Go(func() error {
+				res, err := r.client.Do(req)
+				if err != nil {
+					return failure.Wrap(err)
 				}
-			}
+				defer res.Body.Close()
 
-			u := req.URL
-			u.RawQuery = ""
-			gen.addMethod(m.Service+"Client", &method{
-				Name:   m.Method,
-				method: req.Method,
-				url:    u.String(),
-				req:    methReq,
-				res:    methRes,
+				methRes, err := r.decoder.Decode(res.Body)
+				if err != nil {
+					return failure.Wrap(err)
+				}
+
+				var methReq _type
+				switch req.Method {
+				case http.MethodGet:
+					methReq = structFromQuery(req.URL.Query())
+				default:
+					panic("not implemnted yet")
+				}
+
+				u := req.URL
+				u.RawQuery = ""
+				gen.addMethod(service+"Client", &method{
+					Name:   m.Name,
+					method: req.Method,
+					url:    u.String(),
+					req:    methReq,
+					res:    methRes,
+				})
+
+				return nil
 			})
-
-			return nil
-		})
+		}
 	}
 
 	if err := eg.Wait(); err != nil {

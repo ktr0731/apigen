@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"go/format"
 	"io"
-	"net/http"
-	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -27,29 +25,15 @@ type generator struct {
 	b        strings.Builder
 	err      error
 	errOnce  sync.Once
-	headers  http.Header
 	services map[string][]*method
 }
 
 func newGenerator(w io.Writer) *generator {
-	return &generator{writer: w, headers: make(http.Header), services: make(map[string][]*method)}
+	return &generator{writer: w, services: make(map[string][]*method)}
 }
 
 func (g *generator) addMethod(service string, method *method) {
 	g.services[service] = append(g.services[service], method)
-}
-
-var allowedHeaders = map[string]bool{
-	"Cookie":     false,
-	"Origin":     false,
-	"User-Agent": false,
-}
-
-func (g *generator) addHeader(k, v string) {
-	if added, found := allowedHeaders[k]; found && !added {
-		g.headers.Add(k, v)
-		allowedHeaders[k] = true
-	}
 }
 
 func (g *generator) generate() error {
@@ -94,18 +78,7 @@ func (g *generator) generate() error {
 				retVals: retVals{{_type: &definedType{name: public(name)}}},
 			},
 			func() {
-				if len(g.headers) != 0 {
-					g.w("headers := make(http.Header)")
-					s := make([]string, 0, len(g.headers))
-					for k, v := range g.headers {
-						for _, vv := range v {
-							s = append(s, fmt.Sprintf("headers.Add(%q, %q)", k, vv))
-						}
-					}
-					sort.Slice(s, func(i, j int) bool { return s[i] < s[j] })
-					g.w(strings.Join(s, "\n"))
-				}
-				g.wf("return &%s{Client: client.New(append(opts, client.WithHeaders(headers))...)}", strcase.ToLowerCamel(name))
+				g.wf("return &%s{Client: client.New(opts...)}", strcase.ToLowerCamel(name))
 			},
 		)
 

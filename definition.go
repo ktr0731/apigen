@@ -10,21 +10,23 @@ import (
 
 // Definition defines API metadata for code generation.
 type Definition struct {
-	// Methods defines API methods.
-	// Each method must be unique in combination of "Service" and "Method".
-	Methods []*Method
+	// Services defines API services and its methods.
+	// Each method name must be unique.
+	Services map[string][]*Method
 }
 
 func (d *Definition) validate() error {
-	for _, m := range d.Methods {
-		if !isIdent(m.Service) {
-			return fmt.Errorf("service name '%s' should satisfy identifier name spec: %w", m.Service, ErrInvalidDefinition)
-		}
-		if !isIdent(m.Method) {
-			return fmt.Errorf("method name '%s' should satisfy identifier name spec: %w", m.Method, ErrInvalidDefinition)
-		}
-		if m.Request == nil {
-			return fmt.Errorf("field Request should not be nil: %w", ErrInvalidDefinition)
+	for service, methods := range d.Services {
+		for _, m := range methods {
+			if !isIdent(service) {
+				return fmt.Errorf("service name '%s' should satisfy identifier name spec: %w", service, ErrInvalidDefinition)
+			}
+			if !isIdent(m.Name) {
+				return fmt.Errorf("method name '%s' should satisfy identifier name spec: %w", m.Name, ErrInvalidDefinition)
+			}
+			if m.Request == nil {
+				return fmt.Errorf("field Request should not be nil: %w", ErrInvalidDefinition)
+			}
 		}
 	}
 
@@ -35,10 +37,8 @@ func (d *Definition) validate() error {
 type RequestFunc func(context.Context) (*http.Request, error)
 
 type Method struct {
-	// Service defines the name of service which provides APIs through an API server.
-	Service string
-	// Method defines the name of method which represents an API.
-	Method string
+	// Name defines the name of method which represents an API.
+	Name string
 	// Request instantiates a new *http.Request. See examples for details.
 	Request RequestFunc
 }

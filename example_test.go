@@ -10,16 +10,16 @@ import (
 
 func ExampleGenerate() {
 	def := &apigen.Definition{
-		Methods: []*apigen.Method{
-			{
-				Service: "Dummy",
-				Method:  "ListPosts",
-				Request: curl.ParseCommand(`curl https://jsonplaceholder.typicode.com/posts`),
-			},
-			{
-				Service: "Dummy",
-				Method:  "GetPost",
-				Request: curl.ParseCommand(`curl https://jsonplaceholder.typicode.com/post?id=1`),
+		Services: map[string][]*apigen.Method{
+			"Dummy": []*apigen.Method{
+				{
+					Name:    "ListPosts",
+					Request: curl.ParseCommand(`curl https://jsonplaceholder.typicode.com/posts`),
+				},
+				{
+					Name:    "GetPost",
+					Request: curl.ParseCommand(`curl https://jsonplaceholder.typicode.com/post?id=1`),
+				},
 			},
 		},
 	}
@@ -49,7 +49,7 @@ func ExampleGenerate() {
 	// }
 	//
 	// func NewDummyClient(opts ...client.Option) DummyClient {
-	// 	return &dummyClient{Client: client.New(append(opts, client.WithHeaders(headers))...)}
+	// 	return &dummyClient{Client: client.New(opts...)}
 	// }
 	//
 	// func (c *dummyClient) GetPost(ctx context.Context, req *GetPostRequest) (*GetPostResponse, error) {
