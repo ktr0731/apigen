@@ -21,13 +21,13 @@ const (
 	jsonTypeObject
 )
 
-type Decoder interface {
+type decoder interface {
 	Decode(io.Reader) (*structType, error)
 }
 
-type JSONDecoder struct{}
+type jsonDecoder struct{}
 
-func (d *JSONDecoder) Decode(r io.Reader) (*structType, error) {
+func (d *jsonDecoder) Decode(r io.Reader) (*structType, error) {
 	v := make(map[string]interface{})
 	if err := json.NewDecoder(r).Decode(&v); err != nil {
 		return nil, failure.Wrap(err)

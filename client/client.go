@@ -6,7 +6,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"os"
 	"reflect"
 )
 
@@ -60,10 +59,8 @@ func (c *Client) Do(
 	}
 	defer hres.Body.Close()
 
-	r := io.TeeReader(hres.Body, os.Stdout)
-
 	// TODO: Support another codecs.
-	return json.NewDecoder(r).Decode(&res)
+	return json.NewDecoder(hres.Body).Decode(&res)
 }
 
 func reqToRawQuery(v interface{}) string {
