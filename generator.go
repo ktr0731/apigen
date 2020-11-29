@@ -2,7 +2,6 @@ package apigen
 
 import (
 	"fmt"
-	"go/format"
 	"io"
 	"strconv"
 	"strings"
@@ -10,6 +9,7 @@ import (
 
 	"github.com/iancoleman/strcase"
 	"github.com/morikuni/failure"
+	"golang.org/x/tools/imports"
 )
 
 type method struct {
@@ -41,7 +41,7 @@ func (g *generator) generate() error {
 	g.comment("github.com/ktr0731/apigen")
 	g.w("")
 	g._package("main")
-	g._import("context", "net/http", "net/url", "github.com/ktr0731/apigen/client")
+	g._import("github.com/ktr0731/apigen/client") // Standard and exp packages will be imported by imports.Process.
 
 	for name, methods := range g.services {
 		name := name
@@ -103,7 +103,12 @@ func (g *generator) generate() error {
 		return failure.Wrap(err)
 	}
 
-	b, err := format.Source([]byte(out))
+	b, err := imports.Process("", []byte(out), &imports.Options{
+		AllErrors: true,
+		Comments:  true,
+		TabIndent: true,
+		TabWidth:  8,
+	})
 	if err != nil {
 		return failure.Wrap(err)
 	}

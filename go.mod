@@ -10,4 +10,5 @@ require (
 	github.com/morikuni/failure v0.13.0
 	github.com/spf13/pflag v1.0.5
 	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
+	golang.org/x/tools v0.0.0-20201013201025-64a9e34f3752
 )
