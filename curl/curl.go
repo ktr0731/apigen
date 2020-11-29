@@ -58,7 +58,7 @@ func newRequest(ctx context.Context, url *url.URL, flags *flags) (*http.Request,
 		return nil, failure.New(apigen.ErrInvalidUsage, failure.Message("unsupported method"))
 	}
 
-	req, err := http.NewRequestWithContext(ctx, flags.request, url.String(), nil) // TODO
+	req, err := http.NewRequestWithContext(ctx, flags.request, url.String(), nil)
 	if err != nil {
 		return nil, failure.Translate(err, apigen.ErrInvalidUsage, failure.Context{"method": flags.request})
 	}

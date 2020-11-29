@@ -81,5 +81,6 @@ func indirect(rv reflect.Value) reflect.Value {
 	if rv.Type().Kind() != reflect.Ptr {
 		return rv
 	}
+
 	return indirect(reflect.Indirect(rv))
 }

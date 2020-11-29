@@ -60,6 +60,8 @@ func (g *generator) generate() error {
 	g._import("context", "net/http", "net/url", "github.com/ktr0731/apigen/client")
 
 	for name, methods := range g.services {
+		name := name
+
 		g.typeInterface(name, methods)
 
 		implName := strcase.ToLowerCamel(name)
@@ -89,7 +91,7 @@ func (g *generator) generate() error {
 					},
 					variadic: true,
 				}},
-				retVals: retVals{{_type: &definedType{name: fmt.Sprintf("%s", public(name))}}},
+				retVals: retVals{{_type: &definedType{name: public(name)}}},
 			},
 			func() {
 				g.w("headers := make(http.Header)")
@@ -238,6 +240,7 @@ func (g *generator) gen() (string, error) {
 	if g.err != nil {
 		return "", g.err
 	}
+
 	return g.b.String(), nil
 }
 
@@ -283,6 +286,7 @@ func (vals retVals) String() string {
 	if len(vals) > 1 {
 		return fmt.Sprintf("(%s)", strings.Join(vs, ", "))
 	}
+
 	return strings.Join(vs, ", ")
 }
 

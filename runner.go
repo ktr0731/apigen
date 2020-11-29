@@ -65,6 +65,8 @@ func (r *runner) Run(ctx context.Context, def *Definition) error {
 			switch req.Method {
 			case http.MethodGet:
 				methReq = structFromQuery(req.URL.Query())
+			default:
+				panic("not implemnted yet")
 			}
 
 			for k, v := range req.Header {

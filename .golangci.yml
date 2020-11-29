@@ -30,7 +30,6 @@ linters:
     - unused
     - varcheck
     - whitespace
-    - interfacer
     - scopelint
     - asciicheck
     - depguard
@@ -40,6 +39,23 @@ linters:
     - maligned
     - nolintlint
     - rowserrcheck
+    - errorlint
+    - exhaustive
+    - exhaustivestruct
+    - exportloopref
+    - gci
+    - gocognit
+    - gocyclo
+    - goerr113
+    - gofumpt
+    - goheader
+    - nestif
+    - nlreturn
+    - noctx
+    - paralleltest
+    - sqlclosecheck
+    - testpackage
+    - tparallel
 
 issues:
   exclude:
@@ -47,5 +63,4 @@ issues:
   exclude-rules:
     - path: _test\.go
       linters:
-        - interfacer
         - maligned

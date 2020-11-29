@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"path"
 	"strings"
+
+	"github.com/achiku/varfmt"
 )
 
 var (
@@ -40,11 +42,12 @@ func (t *structType) String() string {
 		s += fmt.Sprintf("%s\n", t.fields[i].String())
 	}
 	s += "}"
+
 	return s
 }
 
 type structField struct {
-	name  string // Means embeded field if name is empty.
+	name  string // Means embedded field if name is empty.
 	_type _type
 	tags  map[string][]string
 }
@@ -73,11 +76,6 @@ type _emptyIfaceType struct{}
 func (t *_emptyIfaceType) isBasic() bool  { return false }
 func (t *_emptyIfaceType) String() string { return "interface{}" }
 
-type externalType struct{}
-
-func (t *externalType) isBasic() bool  { return false }
-func (t *externalType) String() string { return "interface{}" }
-
 type definedType struct {
 	pkg     string
 	name    string
@@ -96,5 +94,8 @@ func (t *definedType) String() string {
 	if t.pointer {
 		s = "*" + s
 	}
+
 	return s
 }
+
+func public(s string) string { return varfmt.PublicVarName(s) }

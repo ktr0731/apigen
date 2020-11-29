@@ -121,7 +121,8 @@ func structFromQuery(q url.Values) *structType {
 	for k, v := range q {
 		field := &structField{
 			name: public(k),
-			tags: map[string][]string{"name": {k}}}
+			tags: map[string][]string{"name": {k}},
+		}
 		if len(v) == 1 {
 			field._type = typeString
 		} else {
@@ -129,5 +130,6 @@ func structFromQuery(q url.Values) *structType {
 		}
 		s.fields = append(s.fields, field)
 	}
+
 	return &s
 }
