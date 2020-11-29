@@ -1,0 +1,12 @@
+github.com/achiku/varfmt v0.0.0-20160708124000-f820e1efecee h1:IfTwtLm+DUeY8kZ8NKSxGRr2kaCe8qqIpJz4Uwh1efU=
+github.com/achiku/varfmt v0.0.0-20160708124000-f820e1efecee/go.mod h1:RKS7P4TSY/jV2QjH/ZxoAE2l4EEXZRPwQ/tIzXiFrk0=
+github.com/iancoleman/strcase v0.1.2 h1:gnomlvw9tnV3ITTAxzKSgTF+8kFWcU/f+TgttpXGz1U=
+github.com/iancoleman/strcase v0.1.2/go.mod h1:SK73tn/9oHe+/Y0h39VT4UCxmurVJkR5NA7kMEAOgSE=
+github.com/mattn/go-shellwords v1.0.10 h1:Y7Xqm8piKOO3v10Thp7Z36h4FYFjt5xB//6XvOrs2Gw=
+github.com/mattn/go-shellwords v1.0.10/go.mod h1:EZzvwXDESEeg03EKmM+RmDnNOPKG4lLtQsUlTZDWQ8Y=
+github.com/morikuni/failure v0.13.0 h1:mjeRIz6kf9NBJ0/UZOWnlA/4cbpy1a4WpxN1xBzByng=
+github.com/morikuni/failure v0.13.0/go.mod h1:+IjvKCz9B/D4BQrTzYLwERdWyMkGJdu+q5gri9dWecg=
+github.com/spf13/pflag v1.0.5 h1:iy+VFUOCP1a+8yFto/drg2CJ5u0yRoB7fZw3DKv/JXA=
+github.com/spf13/pflag v1.0.5/go.mod h1:McXfInJRrz4CZXVZOBLb0bTZqETkiAhM9Iw0y3An2Bg=
+golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9 h1:SQFwaSi55rU7vdNs9Yr0Z324VNlrF+0wMqRXT4St8ck=
+golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
