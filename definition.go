@@ -2,11 +2,10 @@ package apigen
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 	"unicode"
-
-	"github.com/morikuni/failure"
 )
 
 type Definition struct {
@@ -16,22 +15,13 @@ type Definition struct {
 func (d *Definition) validate() error {
 	for _, m := range d.Methods {
 		if !isIdent(m.Service) {
-			return failure.New(
-				ErrInvalidDefinition,
-				failure.Messagef("service name '%s' should satisfy identifier name spec", m.Service),
-			)
+			return fmt.Errorf("service name '%s' should satisfy identifier name spec: %w", m.Service, ErrInvalidDefinition)
 		}
 		if !isIdent(m.Method) {
-			return failure.New(
-				ErrInvalidDefinition,
-				failure.Messagef("method name '%s' should satisfy identifier name spec", m.Method),
-			)
+			return fmt.Errorf("method name '%s' should satisfy identifier name spec: %w", m.Method, ErrInvalidDefinition)
 		}
 		if m.Request == nil {
-			return failure.New(
-				ErrInvalidDefinition,
-				failure.Message("Request field should not be nil"),
-			)
+			return fmt.Errorf("Request field should not be nil: %w", ErrInvalidDefinition)
 		}
 	}
 

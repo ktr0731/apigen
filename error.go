@@ -1,8 +1,7 @@
 package apigen
 
-import "github.com/morikuni/failure"
+import "errors"
 
 var (
-	ErrInvalidUsage      failure.Code = failure.StringCode("InvalidUsage")
-	ErrInvalidDefinition failure.Code = failure.StringCode("InvalidDefinition")
+	ErrInvalidDefinition = errors.New("invalid definition")
 )

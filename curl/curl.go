@@ -2,13 +2,13 @@ package curl
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
 
 	"github.com/ktr0731/apigen"
 	"github.com/mattn/go-shellwords"
-	"github.com/morikuni/failure"
 	"github.com/spf13/pflag"
 )
 
@@ -22,7 +22,7 @@ func ParseCommand(cmd string) apigen.RequestFunc {
 	return func(ctx context.Context) (*http.Request, error) {
 		args, err := shellwords.Parse(cmd)
 		if err != nil {
-			return nil, failure.Translate(err, apigen.ErrInvalidUsage, failure.Context{"cmd": cmd})
+			return nil, fmt.Errorf("failed to parse command '%s', err = '%s': %w", cmd, err, apigen.ErrInvalidDefinition)
 		}
 
 		for i := range args {
@@ -36,17 +36,17 @@ func ParseCommand(cmd string) apigen.RequestFunc {
 		fs.BoolVar(&flags.compressed, "compressed", false, "")
 
 		if err := fs.Parse(args); err != nil {
-			return nil, failure.Translate(err, apigen.ErrInvalidUsage, failure.Context{"cmd": cmd})
+			return nil, fmt.Errorf("failed to parse curl flags, err = '%s': %w", err, apigen.ErrInvalidDefinition)
 		}
 
 		// "curl" and URL.
 		if fs.NArg() > 2 {
-			return nil, failure.New(apigen.ErrInvalidUsage, failure.Message("URL must be specified only one"))
+			return nil, fmt.Errorf("URL must be specified only one: %w", apigen.ErrInvalidDefinition)
 		}
 
 		u, err := url.Parse(fs.Arg(1))
 		if err != nil {
-			return nil, failure.New(apigen.ErrInvalidUsage, failure.Context{"url": fs.Arg(1)})
+			return nil, fmt.Errorf("failed to parse URL '%s', err = '%s': %w", fs.Arg(1), err, apigen.ErrInvalidDefinition)
 		}
 
 		return newRequest(ctx, u, &flags)
@@ -55,12 +55,12 @@ func ParseCommand(cmd string) apigen.RequestFunc {
 
 func newRequest(ctx context.Context, url *url.URL, flags *flags) (*http.Request, error) {
 	if flags.request != http.MethodGet && flags.request != http.MethodPost {
-		return nil, failure.New(apigen.ErrInvalidUsage, failure.Message("unsupported method"))
+		return nil, fmt.Errorf("unsupported method %s: %w", flags.request, apigen.ErrInvalidDefinition)
 	}
 
 	req, err := http.NewRequestWithContext(ctx, flags.request, url.String(), nil)
 	if err != nil {
-		return nil, failure.Translate(err, apigen.ErrInvalidUsage, failure.Context{"method": flags.request})
+		return nil, fmt.Errorf("failed to create a new request, err = '%s': %w", err, apigen.ErrInvalidDefinition)
 	}
 
 	for _, val := range flags.headers {

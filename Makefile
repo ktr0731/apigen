@@ -8,8 +8,8 @@ tools:
 	@cat tools/tools.go | grep -E '^\s*_\s.*' | awk '{ print $$2 }' | xargs go install
 
 .PHONY: build
-build: deps
-	go build
+build:
+	go build ./...
 
 .PHONY: test
 test: format gotest
