@@ -9,8 +9,10 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
+// Generate generates client interfaces, types for requests and responses based on the passed API definitions.
+// If the API definition is invalid, Generate returns an error wrapping ErrInvalidDefinition.
 func Generate(ctx context.Context, def *Definition, opts ...Option) error {
-	return newRunner(opts...).Run(ctx, def)
+	return newRunner(opts...).run(ctx, def)
 }
 
 type runner struct {
@@ -32,7 +34,7 @@ func newRunner(opts ...Option) *runner {
 	return &r
 }
 
-func (r *runner) Run(ctx context.Context, def *Definition) error {
+func (r *runner) run(ctx context.Context, def *Definition) error {
 	if err := def.validate(); err != nil {
 		return failure.Wrap(err)
 	}

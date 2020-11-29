@@ -8,7 +8,10 @@ import (
 	"unicode"
 )
 
+// Definition defines API metadata for code generation.
 type Definition struct {
+	// Methods defines API methods.
+	// Each method must be unique in combination of "Service" and "Method".
 	Methods []*Method
 }
 
@@ -28,11 +31,15 @@ func (d *Definition) validate() error {
 	return nil
 }
 
+// RequestFunc defines a function which instantiates a new *http.Request.
 type RequestFunc func(context.Context) (*http.Request, error)
 
 type Method struct {
+	// Service defines the name of service which provides APIs through an API server.
 	Service string
-	Method  string
+	// Method defines the name of method which represents an API.
+	Method string
+	// Request instantiates a new *http.Request. See examples for details.
 	Request RequestFunc
 }
 
