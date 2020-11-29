@@ -37,6 +37,10 @@ type structType struct {
 
 func (t *structType) isBasic() bool { return false }
 func (t *structType) String() string {
+	if len(t.fields) == 0 {
+		return "struct {}"
+	}
+
 	s := "struct {\n"
 	for i := range t.fields {
 		s += fmt.Sprintf("%s\n", t.fields[i].String())

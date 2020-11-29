@@ -2,6 +2,7 @@ package apigen
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/url"
@@ -22,18 +23,25 @@ const (
 )
 
 type decoder interface {
-	Decode(io.Reader) (*structType, error)
+	Decode(io.Reader) (_type, error)
 }
 
 type jsonDecoder struct{}
 
-func (d *jsonDecoder) Decode(r io.Reader) (*structType, error) {
-	v := make(map[string]interface{})
+func (d *jsonDecoder) Decode(r io.Reader) (_type, error) {
+	var v interface{}
 	if err := json.NewDecoder(r).Decode(&v); err != nil {
 		return nil, failure.Wrap(err)
 	}
 
-	return decodeJSONObject(v), nil
+	switch v := v.(type) {
+	case map[string]interface{}:
+		return decodeJSONObject(v), nil
+	case []interface{}:
+		return decodeJSONArray(v), nil
+	default:
+		return nil, errors.New("unsupported top-level JSON type")
+	}
 }
 
 func decodeJSONType(v interface{}) _type {

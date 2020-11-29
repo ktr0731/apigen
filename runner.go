@@ -63,7 +63,7 @@ func (r *runner) run(ctx context.Context, def *Definition) error {
 				return failure.Wrap(err)
 			}
 
-			var methReq *structType
+			var methReq _type
 			switch req.Method {
 			case http.MethodGet:
 				methReq = structFromQuery(req.URL.Query())
