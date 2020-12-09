@@ -41,6 +41,16 @@ type Method struct {
 	Name string
 	// Request instantiates a new *http.Request. See examples for details.
 	Request RequestFunc
+	// ParamHint specifies path parameters.
+	// These will be organized as the request fields. Each parameter must be start with ":".
+	// For example, "/posts/:postID" is given as a ParamHint, apigen generates the following request type:
+	//
+	//  type Request struct {
+	//    PostID string `name:"postID"`
+	//  }
+	//
+	// If ParamHint differs the actual path, it will be ignored and never generate any request fields.
+	ParamHint string
 }
 
 func isIdent(s string) bool {

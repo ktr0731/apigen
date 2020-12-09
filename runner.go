@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
+	"strings"
 
 	"github.com/iancoleman/strcase"
 	"github.com/morikuni/failure"
@@ -22,6 +24,7 @@ type runner struct {
 	client  *http.Client
 	decoder decoder
 	outDir  string
+	pkg     string
 }
 
 var defaultRunner = runner{
@@ -88,10 +91,15 @@ func (r *runner) processService(ctx context.Context, service string, methods []*
 				return failure.Wrap(err)
 			}
 
-			var methReq _type
+			var methReq *structType
 			switch req.Method {
 			case http.MethodGet:
-				methReq = structFromQuery(req.URL.Query())
+				// TODO: Call before calling API.
+				if m.ParamHint != "" {
+					methReq = structFromPathParams(m.ParamHint, req.URL)
+				} else {
+					methReq = structFromQuery(req.URL.Query())
+				}
 			default:
 				panic("not implemnted yet")
 			}
@@ -101,7 +109,7 @@ func (r *runner) processService(ctx context.Context, service string, methods []*
 			gen.addMethod(service+"Client", &method{
 				Name:   m.Name,
 				method: req.Method,
-				url:    u.String(),
+				url:    strings.ReplaceAll(u.String(), "%25s", "%s"), // Replace URL-encoded '%s'.
 				req:    methReq,
 				res:    methRes,
 			})
@@ -114,5 +122,13 @@ func (r *runner) processService(ctx context.Context, service string, methods []*
 		return err
 	}
 
-	return gen.generate()
+	pkg := r.pkg
+	if pkg == "" {
+		absPath, err := filepath.Abs(r.outDir)
+		if err != nil {
+			return err
+		}
+		pkg = strings.ToLower(path.Base(absPath))
+	}
+	return gen.generate(pkg)
 }

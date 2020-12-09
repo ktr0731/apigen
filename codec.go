@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/url"
 	"sort"
+	"strings"
 
 	"github.com/morikuni/failure"
 )
@@ -122,6 +123,38 @@ func detectJSONType(v interface{}) jsonType {
 	default:
 		panic(fmt.Sprintf("unknown type: %T", cv))
 	}
+}
+
+func structFromPathParams(h string, u *url.URL) *structType {
+	if h == "" {
+		return &structType{}
+	}
+
+	var (
+		t           structType
+		left        int
+		replaceArgs []string
+	)
+
+	runes := []rune(h)
+	for i, r := range runes {
+		switch r {
+		case '{':
+			left = i
+		case '}':
+			k := string(runes[left+1 : i]) // Param name without '{' and '}'.
+			t.fields = append(t.fields, &structField{
+				name:  public(k), // TODO: Support snake case.
+				_type: typeString,
+				tags:  map[string][]string{"name": {k}},
+			})
+			replaceArgs = append(replaceArgs, string(runes[left:i+1]), "%s")
+		}
+	}
+
+	u.Path = strings.NewReplacer(replaceArgs...).Replace(h)
+
+	return &t
 }
 
 func structFromQuery(q url.Values) *structType {

@@ -21,3 +21,9 @@ func WithOutputDirectory(d string) Option {
 		r.outDir = d
 	}
 }
+
+func WithPackage(name string) Option {
+	return func(r *runner) {
+		r.pkg = name
+	}
+}

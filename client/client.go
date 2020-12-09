@@ -71,6 +71,10 @@ func (c *Client) Do(
 }
 
 func reqToRawQuery(v interface{}) string {
+	if v == nil {
+		return ""
+	}
+
 	rv := indirect(reflect.ValueOf(v))
 	rt := rv.Type()
 
