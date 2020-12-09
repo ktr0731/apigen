@@ -2,7 +2,6 @@ package apigen
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/url"
@@ -41,7 +40,7 @@ func (d *jsonDecoder) Decode(r io.Reader) (_type, error) {
 	case []interface{}:
 		return decodeJSONArray(v), nil
 	default:
-		return nil, errors.New("unsupported top-level JSON type")
+		return nil, fmt.Errorf("unsupported top-level JSON type: %w", ErrUnimplemented)
 	}
 }
 

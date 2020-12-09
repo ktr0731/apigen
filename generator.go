@@ -30,6 +30,7 @@ func (r *request) toStruct() *structType {
 	if r.body != nil {
 		s.fields = append(s.fields, r.body.fields...)
 	}
+
 	return &s
 }
 
@@ -72,8 +73,11 @@ func (g *generator) generate(pkg string) error {
 		name    string
 		methods []*method
 	}
-	var services []*service
+
+	services := make([]*service, 0, len(g.services))
 	for name, methods := range g.services {
+		methods := methods
+
 		sort.Slice(methods, func(i, j int) bool {
 			return methods[i].name < methods[j].name
 		})

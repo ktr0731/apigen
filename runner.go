@@ -2,7 +2,6 @@ package apigen
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -47,6 +46,9 @@ func (r *runner) run(ctx context.Context, def *Definition) error {
 
 	eg, cctx := errgroup.WithContext(ctx)
 	for service, methods := range def.Services {
+		service := service
+		methods := methods
+
 		eg.Go(func() error {
 			return r.processService(cctx, service, methods)
 		})
@@ -71,7 +73,7 @@ func (r *runner) processService(ctx context.Context, service string, methods []*
 			switch req.Method {
 			case http.MethodGet, http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete:
 			default:
-				return errors.New("not implemnted yet")
+				return fmt.Errorf("unsupported method %s: %w", req.Method, ErrUnimplemented)
 			}
 
 			res, err := r.client.Do(req)

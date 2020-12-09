@@ -18,6 +18,8 @@ import (
 var update = flag.Bool("update", false, "update golden files")
 
 func TestGenerate(t *testing.T) {
+	t.Parallel()
+
 	def := &apigen.Definition{
 		Services: map[string][]*apigen.Method{
 			"Dummy": []*apigen.Method{
@@ -61,6 +63,8 @@ func TestGenerate(t *testing.T) {
 }
 
 func assertWithGolden(t *testing.T, actual string) {
+	t.Helper()
+
 	name := t.Name()
 	r := strings.NewReplacer(
 		"/", "-",
@@ -72,15 +76,17 @@ func assertWithGolden(t *testing.T, actual string) {
 	)
 	normalizeFilename := func(name string) string {
 		fname := r.Replace(strings.ToLower(name)) + ".golden"
+
 		return filepath.Join("testdata", fname)
 	}
 
 	fname := normalizeFilename(name)
 
 	if *update {
-		if err := ioutil.WriteFile(fname, []byte(actual), 0644); err != nil {
+		if err := ioutil.WriteFile(fname, []byte(actual), 0600); err != nil {
 			t.Fatalf("failed to update the golden file: %s", err)
 		}
+
 		return
 	}
 
@@ -92,7 +98,7 @@ func assertWithGolden(t *testing.T, actual string) {
 
 	expected := string(b)
 	if runtime.GOOS == "windows" {
-		expected = strings.Replace(expected, "\r\n", "\n", -1)
+		expected = strings.ReplaceAll(expected, "\r\n", "\n")
 	}
 
 	if diff := cmp.Diff(expected, actual); diff != "" {
