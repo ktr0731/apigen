@@ -1,3 +1,4 @@
+// Package curl provides apigen.RequestFunc for curl command.
 package curl
 
 import (
@@ -20,6 +21,7 @@ type flags struct {
 	compressed bool
 }
 
+// ParseCommand receives curl command and returns apigen.RequestFunc.
 func ParseCommand(cmd string) apigen.RequestFunc {
 	return func(ctx context.Context) (*http.Request, error) {
 		args, err := shellwords.Parse(cmd)

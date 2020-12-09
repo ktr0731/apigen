@@ -1,3 +1,5 @@
+// Package apigen provides a generator which generates API clients and request/response types via specific
+// execution environment such as curl.
 package apigen
 
 import (

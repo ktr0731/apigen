@@ -23,6 +23,7 @@ func WithWriter(w io.Writer) Option {
 	}
 }
 
+// WithPackage specifies the generated file's package name. Default is main.
 func WithPackage(name string) Option {
 	return func(r *runner) {
 		r.pkg = name

@@ -36,6 +36,7 @@ func (d *Definition) validate() error {
 // RequestFunc defines a function which instantiates a new *http.Request.
 type RequestFunc func(context.Context) (*http.Request, error)
 
+// Method defines an API method.
 type Method struct {
 	// Name defines the name of method which represents an API.
 	Name string
@@ -46,7 +47,7 @@ type Method struct {
 	// For example, "/posts/:postID" is given as a ParamHint, apigen generates the following request type:
 	//
 	//  type Request struct {
-	//    PostID string `name:"postID"`
+	//    PostID string
 	//  }
 	//
 	// If ParamHint differs the actual path, it will be ignored and never generate any request fields.
