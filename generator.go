@@ -3,6 +3,7 @@ package apigen
 import (
 	"fmt"
 	"io"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -47,8 +48,25 @@ func (g *generator) generate(pkg string) error {
 	g._package(pkg)
 	g._import("github.com/ktr0731/apigen/client") // Standard and exp packages will be imported by imports.Process.
 
+	type service struct {
+		name    string
+		methods []*method
+	}
+	var services []*service
 	for name, methods := range g.services {
-		name := name
+		sort.Slice(methods, func(i, j int) bool {
+			return methods[i].Name < methods[j].Name
+		})
+		services = append(services, &service{name, methods})
+	}
+
+	sort.Slice(services, func(i, j int) bool {
+		return services[i].name < services[j].name
+	})
+
+	for _, service := range services {
+		name := service.name
+		methods := service.methods
 
 		g.typeInterface(name, methods)
 
