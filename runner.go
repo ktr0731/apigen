@@ -93,7 +93,7 @@ func (r *runner) processService(ctx context.Context, service string, methods []*
 			u := req.URL
 			u.RawQuery = ""
 			gen.addMethod(service+"Client", &method{
-				Name:   m.Name,
+				name:   m.Name,
 				method: req.Method,
 				url:    strings.ReplaceAll(u.String(), "%25s", "%s"), // Replace URL-encoded '%s'.
 				req:    methReq,

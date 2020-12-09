@@ -14,7 +14,7 @@ import (
 )
 
 type method struct {
-	Name   string
+	name   string
 	method string
 	url    string
 	req    *structType
@@ -55,7 +55,7 @@ func (g *generator) generate(pkg string) error {
 	var services []*service
 	for name, methods := range g.services {
 		sort.Slice(methods, func(i, j int) bool {
-			return methods[i].Name < methods[j].Name
+			return methods[i].name < methods[j].name
 		})
 		services = append(services, &service{name, methods})
 	}
@@ -110,11 +110,11 @@ func (g *generator) generate(pkg string) error {
 
 		for _, m := range methods {
 			g.definedType(&definedType{
-				name:  m.Name + "Request",
+				name:  m.name + "Request",
 				_type: m.req,
 			})
 			g.definedType(&definedType{
-				name:  m.Name + "Response",
+				name:  m.name + "Response",
 				_type: m.res,
 			})
 		}
@@ -161,14 +161,14 @@ func (g *generator) _import(paths ...string) {
 func (g *generator) typeInterface(name string, methods []*method) {
 	g.wf("type %s interface{", name)
 	for _, m := range methods {
-		g.wf("%s(ctx context.Context, req *%s) (*%s, error)", m.Name, m.Name+"Request", m.Name+"Response")
+		g.wf("%s(ctx context.Context, req *%s) (*%s, error)", m.name, m.name+"Request", m.name+"Response")
 	}
 	g.w("}")
 	g.w("")
 }
 
 func (g *generator) method(recv string, m *method) {
-	g.wf("func (c *%s) %s(ctx context.Context, req *%s) (*%s, error) {", recv, m.Name, m.Name+"Request", m.Name+"Response")
+	g.wf("func (c *%s) %s(ctx context.Context, req *%s) (*%s, error) {", recv, m.name, m.name+"Request", m.name+"Response")
 
 	var v string
 	if strings.Contains(m.url, "%s") {
@@ -186,7 +186,7 @@ func (g *generator) method(recv string, m *method) {
 	g.w("}")
 	g.w("")
 
-	g.wf("var res %s", m.Name+"Response")
+	g.wf("var res %s", m.name+"Response")
 	g.wf("err = c.Do(ctx, %q, u, req, &res)", m.method)
 	g.w("return &res, err")
 	g.w("}")
