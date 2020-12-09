@@ -17,7 +17,7 @@ type method struct {
 	name   string
 	method string
 	url    string
-	req    *structType
+	req    _type
 	res    _type
 }
 
@@ -173,7 +173,7 @@ func (g *generator) method(recv string, m *method) {
 	var v string
 	if strings.Contains(m.url, "%s") {
 		var params []string
-		for _, f := range m.req.fields {
+		for _, f := range m.req.(*structType).fields {
 			params = append(params, fmt.Sprintf("req.%s", f.name))
 		}
 		v = fmt.Sprintf(`fmt.Sprintf(%q, %s)`, m.url, strings.Join(params, ", "))

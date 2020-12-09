@@ -3,6 +3,7 @@ package curl
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -15,6 +16,7 @@ import (
 type flags struct {
 	headers    []string
 	request    string
+	data       string
 	compressed bool
 }
 
@@ -33,6 +35,8 @@ func ParseCommand(cmd string) apigen.RequestFunc {
 		fs := pflag.NewFlagSet("curl", pflag.ContinueOnError)
 		fs.StringArrayVarP(&flags.headers, "header", "H", nil, "")
 		fs.StringVarP(&flags.request, "request", "X", http.MethodGet, "")
+		fs.StringVar(&flags.data, "data-binary", "", "")
+		fs.StringVarP(&flags.data, "data", "d", "", "")
 		fs.BoolVar(&flags.compressed, "compressed", false, "")
 
 		if err := fs.Parse(args); err != nil {
@@ -49,16 +53,26 @@ func ParseCommand(cmd string) apigen.RequestFunc {
 			return nil, fmt.Errorf("failed to parse URL '%s', err = '%s': %w", fs.Arg(1), err, apigen.ErrInvalidDefinition)
 		}
 
+		if flags.data != "" && flags.request == http.MethodGet {
+			flags.request = http.MethodPost
+		}
+
 		return newRequest(ctx, u, &flags)
 	}
 }
 
 func newRequest(ctx context.Context, url *url.URL, flags *flags) (*http.Request, error) {
-	if flags.request != http.MethodGet && flags.request != http.MethodPost {
+	switch flags.request {
+	case http.MethodGet, http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete:
+	default:
 		return nil, fmt.Errorf("unsupported method %s: %w", flags.request, apigen.ErrInvalidDefinition)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, flags.request, url.String(), nil)
+	var body io.Reader
+	if flags.data != "" {
+		body = strings.NewReader(flags.data)
+	}
+	req, err := http.NewRequestWithContext(ctx, flags.request, url.String(), body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create a new request, err = '%s': %w", err, apigen.ErrInvalidDefinition)
 	}

@@ -77,14 +77,27 @@ func (r *runner) processService(ctx context.Context, service string, methods []*
 				return failure.Wrap(err)
 			}
 
-			var methReq *structType
+			var methReq _type
 			switch req.Method {
-			case http.MethodGet:
-				// TODO: Call before calling API.
+			case http.MethodGet, http.MethodDelete:
 				if m.ParamHint != "" {
 					methReq = structFromPathParams(m.ParamHint, req.URL)
 				} else {
 					methReq = structFromQuery(req.URL.Query())
+				}
+			case http.MethodPost, http.MethodPut, http.MethodPatch:
+				if req.GetBody == nil {
+					methReq = &structType{}
+				} else {
+					body, err := req.GetBody()
+					if err != nil {
+						return failure.Wrap(err)
+					}
+					req, err := r.decoder.Decode(body)
+					if err != nil {
+						return failure.Wrap(err)
+					}
+					methReq = req
 				}
 			default:
 				panic("not implemnted yet")
