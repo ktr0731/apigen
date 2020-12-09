@@ -2,6 +2,7 @@ package apigen
 
 import (
 	"context"
+	"errors"
 	"io"
 	"net/http"
 	"os"
@@ -66,6 +67,12 @@ func (r *runner) processService(ctx context.Context, service string, methods []*
 		m := m
 
 		eg.Go(func() error {
+			switch req.Method {
+			case http.MethodGet, http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete:
+			default:
+				return errors.New("not implemnted yet")
+			}
+
 			res, err := r.client.Do(req)
 			if err != nil {
 				return failure.Wrap(err)
@@ -77,30 +84,32 @@ func (r *runner) processService(ctx context.Context, service string, methods []*
 				return failure.Wrap(err)
 			}
 
-			var methReq _type
+			var methReq request
+			if m.ParamHint != "" {
+				methReq.path = structFromPathParams(m.ParamHint, req.URL)
+			}
+			if q := req.URL.Query(); len(q) != 0 {
+				methReq.query = structFromQuery(q)
+			}
+
 			switch req.Method {
-			case http.MethodGet, http.MethodDelete:
-				if m.ParamHint != "" {
-					methReq = structFromPathParams(m.ParamHint, req.URL)
-				} else {
-					methReq = structFromQuery(req.URL.Query())
-				}
-			case http.MethodPost, http.MethodPut, http.MethodPatch:
-				if req.GetBody == nil {
-					methReq = &structType{}
-				} else {
-					body, err := req.GetBody()
+			case http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete:
+				if req.GetBody != nil {
+					b, err := req.GetBody()
 					if err != nil {
 						return failure.Wrap(err)
 					}
-					req, err := r.decoder.Decode(body)
+					req, err := r.decoder.Decode(b)
 					if err != nil {
 						return failure.Wrap(err)
 					}
-					methReq = req
+
+					methReq.body = &structType{
+						fields: []*structField{
+							{name: "Body", _type: req},
+						},
+					}
 				}
-			default:
-				panic("not implemnted yet")
 			}
 
 			u := req.URL
@@ -109,7 +118,7 @@ func (r *runner) processService(ctx context.Context, service string, methods []*
 				name:   m.Name,
 				method: req.Method,
 				url:    strings.ReplaceAll(u.String(), "%25s", "%s"), // Replace URL-encoded '%s'.
-				req:    methReq,
+				req:    &methReq,
 				res:    methRes,
 			})
 

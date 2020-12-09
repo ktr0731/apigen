@@ -54,6 +54,7 @@ type structField struct {
 	name  string // Means embedded field if name is empty.
 	_type _type
 	tags  map[string][]string
+	meta  map[string]string
 }
 
 func (f *structField) String() string {

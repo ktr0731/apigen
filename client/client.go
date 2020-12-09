@@ -1,12 +1,11 @@
 package client
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
-	"io"
 	"net/http"
 	"net/url"
-	"reflect"
 )
 
 var defaultClient = Client{
@@ -34,15 +33,14 @@ func (c *Client) Do(
 	url *url.URL,
 	req, res interface{},
 ) error {
-	var body io.Reader
-	switch method {
-	case http.MethodGet:
-		url.RawQuery = reqToRawQuery(req)
-	case http.MethodPost:
-		panic("not implemented yet")
+	var body bytes.Buffer
+	if req != nil {
+		if err := json.NewEncoder(&body).Encode(&req); err != nil {
+			return err
+		}
 	}
 
-	hreq, err := http.NewRequestWithContext(ctx, method, url.String(), body)
+	hreq, err := http.NewRequestWithContext(ctx, method, url.String(), &body)
 	if err != nil {
 		return err
 	}
@@ -68,30 +66,4 @@ func (c *Client) Do(
 
 	// TODO: Support another codecs.
 	return json.NewDecoder(hres.Body).Decode(&res)
-}
-
-func reqToRawQuery(v interface{}) string {
-	if v == nil {
-		return ""
-	}
-
-	rv := indirect(reflect.ValueOf(v))
-	rt := rv.Type()
-
-	vals := make(url.Values)
-	for i := 0; i < rt.NumField(); i++ {
-		k := rt.Field(i).Tag.Get("name")
-		v := rv.Field(i).Interface().(string)
-		vals.Add(k, v)
-	}
-
-	return vals.Encode()
-}
-
-func indirect(rv reflect.Value) reflect.Value {
-	if rv.Type().Kind() != reflect.Ptr {
-		return rv
-	}
-
-	return indirect(reflect.Indirect(rv))
 }

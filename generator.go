@@ -13,11 +13,31 @@ import (
 	"golang.org/x/tools/imports"
 )
 
+type request struct {
+	path  *structType
+	query *structType
+	body  *structType
+}
+
+func (r *request) toStruct() *structType {
+	var s structType
+	if r.path != nil && len(r.path.fields) != 0 {
+		s.fields = append(s.fields, r.path.fields...)
+	}
+	if r.query != nil && len(r.query.fields) != 0 {
+		s.fields = append(s.fields, r.query.fields...)
+	}
+	if r.body != nil {
+		s.fields = append(s.fields, r.body.fields...)
+	}
+	return &s
+}
+
 type method struct {
 	name   string
 	method string
 	url    string
-	req    _type
+	req    *request
 	res    _type
 }
 
@@ -111,7 +131,7 @@ func (g *generator) generate(pkg string) error {
 		for _, m := range methods {
 			g.definedType(&definedType{
 				name:  m.name + "Request",
-				_type: m.req,
+				_type: m.req.toStruct(),
 			})
 			g.definedType(&definedType{
 				name:  m.name + "Response",
@@ -124,6 +144,8 @@ func (g *generator) generate(pkg string) error {
 	if err != nil {
 		return failure.Wrap(err)
 	}
+
+	fmt.Println(out)
 
 	b, err := imports.Process("", []byte(out), &imports.Options{
 		AllErrors: true,
@@ -170,24 +192,43 @@ func (g *generator) typeInterface(name string, methods []*method) {
 func (g *generator) method(recv string, m *method) {
 	g.wf("func (c *%s) %s(ctx context.Context, req *%s) (*%s, error) {", recv, m.name, m.name+"Request", m.name+"Response")
 
+	if m.req.query != nil {
+		g.w("query := url.Values{")
+		for _, f := range m.req.query.fields {
+			if f._type == typeString {
+				g.wf("%q: []string{req.%s},", f.meta["key"], f.name)
+			} else {
+				g.wf("%q: req.%s,", f.meta["key"], f.name)
+			}
+		}
+		g.w("}.Encode()")
+		g.w("")
+	}
+
 	var v string
-	if strings.Contains(m.url, "%s") {
+	if m.req.path != nil {
 		var params []string
-		for _, f := range m.req.(*structType).fields {
+		for _, f := range m.req.path.fields {
 			params = append(params, fmt.Sprintf("req.%s", f.name))
 		}
 		v = fmt.Sprintf(`fmt.Sprintf(%q, %s)`, m.url, strings.Join(params, ", "))
 	} else {
 		v = strconv.Quote(m.url)
 	}
+
 	g.wf(`u, err := url.Parse(%s)`, v)
 	g.w("if err != nil {")
 	g.w("return nil, err")
 	g.w("}")
 	g.w("")
 
+	if m.req.query != nil {
+		g.w("u.RawQuery = query")
+		g.w("")
+	}
+
 	g.wf("var res %s", m.name+"Response")
-	g.wf("err = c.Do(ctx, %q, u, req, &res)", m.method)
+	g.wf("err = c.Do(ctx, %q, u, req.Body, &res)", m.method)
 	g.w("return &res, err")
 	g.w("}")
 	g.w("")

@@ -146,7 +146,6 @@ func structFromPathParams(h string, u *url.URL) *structType {
 			t.fields = append(t.fields, &structField{
 				name:  public(k), // TODO: Support snake case.
 				_type: typeString,
-				tags:  map[string][]string{"name": {k}},
 			})
 			replaceArgs = append(replaceArgs, string(runes[left:i+1]), "%s")
 		}
@@ -162,7 +161,7 @@ func structFromQuery(q url.Values) *structType {
 	for k, v := range q {
 		field := &structField{
 			name: public(k),
-			tags: map[string][]string{"name": {k}},
+			meta: map[string]string{"key": k},
 		}
 		if len(v) == 1 {
 			field._type = typeString
