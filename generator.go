@@ -145,8 +145,6 @@ func (g *generator) generate(pkg string) error {
 		return failure.Wrap(err)
 	}
 
-	fmt.Println(out)
-
 	b, err := imports.Process("", []byte(out), &imports.Options{
 		AllErrors: true,
 		Comments:  true,
@@ -228,7 +226,11 @@ func (g *generator) method(recv string, m *method) {
 	}
 
 	g.wf("var res %s", m.name+"Response")
-	g.wf("err = c.Do(ctx, %q, u, req.Body, &res)", m.method)
+	if m.req.body != nil {
+		g.wf("err = c.Do(ctx, %q, u, req.Body, &res)", m.method)
+	} else {
+		g.wf("err = c.Do(ctx, %q, u, nil, &res)", m.method)
+	}
 	g.w("return &res, err")
 	g.w("}")
 	g.w("")

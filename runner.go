@@ -3,6 +3,7 @@ package apigen
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -106,7 +107,14 @@ func (r *runner) processService(ctx context.Context, service string, methods []*
 
 					methReq.body = &structType{
 						fields: []*structField{
-							{name: "Body", _type: req},
+							{
+								name: "Body",
+								_type: &definedType{
+									name:    fmt.Sprintf("%sRequestBody", m.Name),
+									pointer: true,
+									_type:   req,
+								},
+							},
 						},
 					}
 				}
