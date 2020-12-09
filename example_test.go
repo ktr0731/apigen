@@ -13,7 +13,12 @@ func ExampleGenerate() {
 		Services: map[string][]*apigen.Method{
 			"Dummy": []*apigen.Method{
 				{
-					Name:    "CreatePost",
+					Name:      "CreatePost",
+					Request:   curl.ParseCommand(`curl 'https://jsonplaceholder.typicode.com/posts/1' --data-binary '{"title":"foo","body":"bar","userId":1}'`),
+					ParamHint: "/posts/{postID}",
+				},
+				{
+					Name:    "UpdatePost",
 					Request: curl.ParseCommand(`curl 'https://jsonplaceholder.typicode.com/posts' --data-binary '{"title":"foo","body":"bar","userId":1}'`),
 				},
 				{
@@ -60,6 +65,7 @@ func ExampleGenerate() {
 	// 	GetPost(ctx context.Context, req *GetPostRequest) (*GetPostResponse, error)
 	// 	ListComments(ctx context.Context, req *ListCommentsRequest) (*ListCommentsResponse, error)
 	// 	ListPosts(ctx context.Context, req *ListPostsRequest) (*ListPostsResponse, error)
+	// 	UpdatePost(ctx context.Context, req *UpdatePostRequest) (*UpdatePostResponse, error)
 	// }
 	//
 	// type dummyClient struct {
@@ -71,7 +77,7 @@ func ExampleGenerate() {
 	// }
 	//
 	// func (c *dummyClient) CreatePost(ctx context.Context, req *CreatePostRequest) (*CreatePostResponse, error) {
-	// 	u, err := url.Parse("https://jsonplaceholder.typicode.com/posts")
+	// 	u, err := url.Parse("https://jsonplaceholder.typicode.com/posts/1")
 	// 	if err != nil {
 	// 		return nil, err
 	// 	}
@@ -125,15 +131,24 @@ func ExampleGenerate() {
 	// 	return &res, err
 	// }
 	//
+	// func (c *dummyClient) UpdatePost(ctx context.Context, req *UpdatePostRequest) (*UpdatePostResponse, error) {
+	// 	u, err := url.Parse("https://jsonplaceholder.typicode.com/posts")
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	//
+	// 	var res UpdatePostResponse
+	// 	err = c.Do(ctx, "POST", u, req, &res)
+	// 	return &res, err
+	// }
+	//
 	// type CreatePostRequest struct {
 	// 	Body   string  `json:"body,omitempty"`
 	// 	Title  string  `json:"title,omitempty"`
 	// 	UserID float64 `json:"userId,omitempty"`
 	// }
 	//
-	// type CreatePostResponse struct {
-	// 	ID float64 `json:"id,omitempty"`
-	// }
+	// type CreatePostResponse struct{}
 	//
 	// type DeletePostRequest struct {
 	// 	PostID string `name:"postID"`
@@ -171,5 +186,15 @@ func ExampleGenerate() {
 	// 	ID     float64 `json:"id,omitempty"`
 	// 	Title  string  `json:"title,omitempty"`
 	// 	UserID float64 `json:"userId,omitempty"`
+	// }
+	//
+	// type UpdatePostRequest struct {
+	// 	Body   string  `json:"body,omitempty"`
+	// 	Title  string  `json:"title,omitempty"`
+	// 	UserID float64 `json:"userId,omitempty"`
+	// }
+	//
+	// type UpdatePostResponse struct {
+	// 	ID float64 `json:"id,omitempty"`
 	// }
 }
