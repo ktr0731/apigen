@@ -18,14 +18,6 @@ func ExampleGenerate() {
 					ParamHint: "/posts/{postID}",
 				},
 				{
-					Name:    "UpdatePost",
-					Request: curl.ParseCommand(`curl 'https://jsonplaceholder.typicode.com/posts' --data-binary '{"title":"foo","body":"bar","userId":1}'`),
-				},
-				{
-					Name:    "ListPosts",
-					Request: curl.ParseCommand(`curl https://jsonplaceholder.typicode.com/posts`),
-				},
-				{
 					Name:    "GetPost",
 					Request: curl.ParseCommand(`curl https://jsonplaceholder.typicode.com/posts?id=1`),
 				},
@@ -33,11 +25,6 @@ func ExampleGenerate() {
 					Name:      "ListComments",
 					Request:   curl.ParseCommand(`curl https://jsonplaceholder.typicode.com/posts/1/comments`),
 					ParamHint: "/posts/{postID}/comments",
-				},
-				{
-					Name:      "DeletePost",
-					Request:   curl.ParseCommand(`curl 'https://jsonplaceholder.typicode.com/posts/1' -X 'DELETE'`),
-					ParamHint: "/posts/{postID}",
 				},
 			},
 		},
@@ -61,11 +48,8 @@ func ExampleGenerate() {
 	//
 	// type DummyClient interface {
 	// 	CreatePost(ctx context.Context, req *CreatePostRequest) (*CreatePostResponse, error)
-	// 	DeletePost(ctx context.Context, req *DeletePostRequest) (*DeletePostResponse, error)
 	// 	GetPost(ctx context.Context, req *GetPostRequest) (*GetPostResponse, error)
 	// 	ListComments(ctx context.Context, req *ListCommentsRequest) (*ListCommentsResponse, error)
-	// 	ListPosts(ctx context.Context, req *ListPostsRequest) (*ListPostsResponse, error)
-	// 	UpdatePost(ctx context.Context, req *UpdatePostRequest) (*UpdatePostResponse, error)
 	// }
 	//
 	// type dummyClient struct {
@@ -77,35 +61,30 @@ func ExampleGenerate() {
 	// }
 	//
 	// func (c *dummyClient) CreatePost(ctx context.Context, req *CreatePostRequest) (*CreatePostResponse, error) {
-	// 	u, err := url.Parse("https://jsonplaceholder.typicode.com/posts/1")
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	//
-	// 	var res CreatePostResponse
-	// 	err = c.Do(ctx, "POST", u, req, &res)
-	// 	return &res, err
-	// }
-	//
-	// func (c *dummyClient) DeletePost(ctx context.Context, req *DeletePostRequest) (*DeletePostResponse, error) {
 	// 	u, err := url.Parse(fmt.Sprintf("https://jsonplaceholder.typicode.com/posts/%s", req.PostID))
 	// 	if err != nil {
 	// 		return nil, err
 	// 	}
 	//
-	// 	var res DeletePostResponse
-	// 	err = c.Do(ctx, "DELETE", u, req, &res)
+	// 	var res CreatePostResponse
+	// 	err = c.Do(ctx, "POST", u, req.Body, &res)
 	// 	return &res, err
 	// }
 	//
 	// func (c *dummyClient) GetPost(ctx context.Context, req *GetPostRequest) (*GetPostResponse, error) {
+	// 	query := url.Values{
+	// 		"id": []string{req.ID},
+	// 	}.Encode()
+	//
 	// 	u, err := url.Parse("https://jsonplaceholder.typicode.com/posts")
 	// 	if err != nil {
 	// 		return nil, err
 	// 	}
 	//
+	// 	u.RawQuery = query
+	//
 	// 	var res GetPostResponse
-	// 	err = c.Do(ctx, "GET", u, req, &res)
+	// 	err = c.Do(ctx, "GET", u, nil, &res)
 	// 	return &res, err
 	// }
 	//
@@ -116,33 +95,16 @@ func ExampleGenerate() {
 	// 	}
 	//
 	// 	var res ListCommentsResponse
-	// 	err = c.Do(ctx, "GET", u, req, &res)
-	// 	return &res, err
-	// }
-	//
-	// func (c *dummyClient) ListPosts(ctx context.Context, req *ListPostsRequest) (*ListPostsResponse, error) {
-	// 	u, err := url.Parse("https://jsonplaceholder.typicode.com/posts")
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	//
-	// 	var res ListPostsResponse
-	// 	err = c.Do(ctx, "GET", u, req, &res)
-	// 	return &res, err
-	// }
-	//
-	// func (c *dummyClient) UpdatePost(ctx context.Context, req *UpdatePostRequest) (*UpdatePostResponse, error) {
-	// 	u, err := url.Parse("https://jsonplaceholder.typicode.com/posts")
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	//
-	// 	var res UpdatePostResponse
-	// 	err = c.Do(ctx, "POST", u, req, &res)
+	// 	err = c.Do(ctx, "GET", u, nil, &res)
 	// 	return &res, err
 	// }
 	//
 	// type CreatePostRequest struct {
+	// 	PostID string
+	// 	Body   *CreatePostRequestBody
+	// }
+	//
+	// type CreatePostRequestBody struct {
 	// 	Body   string  `json:"body,omitempty"`
 	// 	Title  string  `json:"title,omitempty"`
 	// 	UserID float64 `json:"userId,omitempty"`
@@ -150,14 +112,8 @@ func ExampleGenerate() {
 	//
 	// type CreatePostResponse struct{}
 	//
-	// type DeletePostRequest struct {
-	// 	PostID string `name:"postID"`
-	// }
-	//
-	// type DeletePostResponse struct{}
-	//
 	// type GetPostRequest struct {
-	// 	ID string `name:"id"`
+	// 	ID string
 	// }
 	//
 	// type GetPostResponse []struct {
@@ -168,7 +124,7 @@ func ExampleGenerate() {
 	// }
 	//
 	// type ListCommentsRequest struct {
-	// 	PostID string `name:"postID"`
+	// 	PostID string
 	// }
 	//
 	// type ListCommentsResponse []struct {
@@ -177,24 +133,5 @@ func ExampleGenerate() {
 	// 	ID     float64 `json:"id,omitempty"`
 	// 	Name   string  `json:"name,omitempty"`
 	// 	PostID float64 `json:"postId,omitempty"`
-	// }
-	//
-	// type ListPostsRequest struct{}
-	//
-	// type ListPostsResponse []struct {
-	// 	Body   string  `json:"body,omitempty"`
-	// 	ID     float64 `json:"id,omitempty"`
-	// 	Title  string  `json:"title,omitempty"`
-	// 	UserID float64 `json:"userId,omitempty"`
-	// }
-	//
-	// type UpdatePostRequest struct {
-	// 	Body   string  `json:"body,omitempty"`
-	// 	Title  string  `json:"title,omitempty"`
-	// 	UserID float64 `json:"userId,omitempty"`
-	// }
-	//
-	// type UpdatePostResponse struct {
-	// 	ID float64 `json:"id,omitempty"`
 	// }
 }
