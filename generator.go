@@ -21,11 +21,13 @@ type method struct {
 }
 
 type generator struct {
-	writer   io.Writer
-	b        strings.Builder
-	err      error
-	errOnce  sync.Once
-	services map[string][]*method
+	writer  io.Writer
+	b       strings.Builder
+	err     error
+	errOnce sync.Once
+
+	servicesMu sync.Mutex
+	services   map[string][]*method
 }
 
 func newGenerator(w io.Writer) *generator {
@@ -33,6 +35,8 @@ func newGenerator(w io.Writer) *generator {
 }
 
 func (g *generator) addMethod(service string, method *method) {
+	g.servicesMu.Lock()
+	defer g.servicesMu.Unlock()
 	g.services[service] = append(g.services[service], method)
 }
 

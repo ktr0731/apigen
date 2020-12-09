@@ -18,7 +18,12 @@ func ExampleGenerate() {
 				},
 				{
 					Name:    "GetPost",
-					Request: curl.ParseCommand(`curl https://jsonplaceholder.typicode.com/post?id=1`),
+					Request: curl.ParseCommand(`curl https://jsonplaceholder.typicode.com/posts?id=1`),
+				},
+				{
+					Name:      "GetPost2",
+					Request:   curl.ParseCommand(`curl https://jsonplaceholder.typicode.com/posts/1`),
+					ParamHint: "/posts/{postID}",
 				},
 			},
 		},
@@ -34,13 +39,15 @@ func ExampleGenerate() {
 	//
 	// import (
 	// 	"context"
-	// 	"github.com/ktr0731/apigen/client"
-	// 	"net/http"
+	// 	"fmt"
 	// 	"net/url"
+	//
+	// 	"github.com/ktr0731/apigen/client"
 	// )
 	//
 	// type DummyClient interface {
 	// 	GetPost(ctx context.Context, req *GetPostRequest) (*GetPostResponse, error)
+	// 	GetPost2(ctx context.Context, req *GetPost2Request) (*GetPost2Response, error)
 	// 	ListPosts(ctx context.Context, req *ListPostsRequest) (*ListPostsResponse, error)
 	// }
 	//
@@ -53,12 +60,23 @@ func ExampleGenerate() {
 	// }
 	//
 	// func (c *dummyClient) GetPost(ctx context.Context, req *GetPostRequest) (*GetPostResponse, error) {
-	// 	u, err := url.Parse("https://jsonplaceholder.typicode.com/post")
+	// 	u, err := url.Parse("https://jsonplaceholder.typicode.com/posts")
 	// 	if err != nil {
 	// 		return nil, err
 	// 	}
 	//
 	// 	var res GetPostResponse
+	// 	err = c.Do(ctx, "GET", u, req, &res)
+	// 	return &res, err
+	// }
+	//
+	// func (c *dummyClient) GetPost2(ctx context.Context, req *GetPost2Request) (*GetPost2Response, error) {
+	// 	u, err := url.Parse(fmt.Sprintf("https://jsonplaceholder.typicode.com/posts/%s", req.PostID))
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	//
+	// 	var res GetPost2Response
 	// 	err = c.Do(ctx, "GET", u, req, &res)
 	// 	return &res, err
 	// }
@@ -78,7 +96,23 @@ func ExampleGenerate() {
 	// 	ID string `name:"id"`
 	// }
 	//
-	// type GetPostResponse struct{}
+	// type GetPostResponse []struct {
+	// 	Body   string  `json:"body,omitempty"`
+	// 	ID     float64 `json:"id,omitempty"`
+	// 	Title  string  `json:"title,omitempty"`
+	// 	UserID float64 `json:"userId,omitempty"`
+	// }
+	//
+	// type GetPost2Request struct {
+	// 	PostID string `name:"postID"`
+	// }
+	//
+	// type GetPost2Response struct {
+	// 	Body   string  `json:"body,omitempty"`
+	// 	ID     float64 `json:"id,omitempty"`
+	// 	Title  string  `json:"title,omitempty"`
+	// 	UserID float64 `json:"userId,omitempty"`
+	// }
 	//
 	// type ListPostsRequest struct{}
 	//

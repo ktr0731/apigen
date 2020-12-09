@@ -2,14 +2,11 @@ package apigen
 
 import (
 	"context"
-	"fmt"
+	"io"
 	"net/http"
 	"os"
-	"path"
-	"path/filepath"
 	"strings"
 
-	"github.com/iancoleman/strcase"
 	"github.com/morikuni/failure"
 	"golang.org/x/sync/errgroup"
 )
@@ -23,31 +20,26 @@ func Generate(ctx context.Context, def *Definition, opts ...Option) error {
 type runner struct {
 	client  *http.Client
 	decoder decoder
-	outDir  string
+	writer  io.Writer
 	pkg     string
 }
 
-var defaultRunner = runner{
-	client:  http.DefaultClient,
-	decoder: &jsonDecoder{},
-	outDir:  ".",
-}
-
 func newRunner(opts ...Option) *runner {
-	r := defaultRunner
+	r := &runner{
+		client:  http.DefaultClient,
+		decoder: &jsonDecoder{},
+		writer:  os.Stdout,
+		pkg:     "main",
+	}
 	for _, o := range opts {
-		o(&r)
+		o(r)
 	}
 
-	return &r
+	return r
 }
 
 func (r *runner) run(ctx context.Context, def *Definition) error {
 	if err := def.validate(); err != nil {
-		return failure.Wrap(err)
-	}
-
-	if err := os.MkdirAll(r.outDir, 0755); err != nil {
 		return failure.Wrap(err)
 	}
 
@@ -62,14 +54,8 @@ func (r *runner) run(ctx context.Context, def *Definition) error {
 }
 
 func (r *runner) processService(ctx context.Context, service string, methods []*Method) error {
-	f, err := os.Create(filepath.Join(r.outDir, fmt.Sprintf("%s.go", strcase.ToSnake(service))))
-	if err != nil {
-		return failure.Wrap(err)
-	}
-	defer f.Close()
-
 	eg, cctx := errgroup.WithContext(ctx)
-	gen := newGenerator(f)
+	gen := newGenerator(r.writer)
 
 	for _, m := range methods {
 		req, err := m.Request(cctx)
@@ -122,13 +108,5 @@ func (r *runner) processService(ctx context.Context, service string, methods []*
 		return err
 	}
 
-	pkg := r.pkg
-	if pkg == "" {
-		absPath, err := filepath.Abs(r.outDir)
-		if err != nil {
-			return err
-		}
-		pkg = strings.ToLower(path.Base(absPath))
-	}
-	return gen.generate(pkg)
+	return gen.generate(r.pkg)
 }

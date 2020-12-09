@@ -1,6 +1,7 @@
 package apigen
 
 import (
+	"io"
 	"net/http"
 )
 
@@ -15,10 +16,10 @@ func WithHTTPClient(c *http.Client) Option {
 	}
 }
 
-// WithOutputDirectory specifies the destination directory for generated files. Default is the current directory.
-func WithOutputDirectory(d string) Option {
+// WithWriter specifies the destination writer for generated files. Default is stdout.
+func WithWriter(w io.Writer) Option {
 	return func(r *runner) {
-		r.outDir = d
+		r.writer = w
 	}
 }
 
