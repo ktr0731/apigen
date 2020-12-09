@@ -2,9 +2,9 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"log"
-
-	"github.com/k0kubun/pp"
 )
 
 func main() {
@@ -15,5 +15,10 @@ func main() {
 		log.Fatal(err)
 	}
 
-	pp.Printf("%+v", res)
+	b, err := json.MarshalIndent(&res, "", "  ")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println(string(b))
 }
