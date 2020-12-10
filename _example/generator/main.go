@@ -12,11 +12,10 @@ import (
 func main() {
 	def := &apigen.Definition{
 		Services: map[string][]*apigen.Method{
-			"Dummy": []*apigen.Method{
+			"Dummy": {
 				{
-					Name:      "CreatePost",
-					Request:   curl.ParseCommand(`curl 'https://jsonplaceholder.typicode.com/posts/1' --data-binary '{"title":"foo","body":"bar","userId":1}'`),
-					ParamHint: "/posts/{postID}",
+					Name:    "CreatePost",
+					Request: curl.ParseCommand(`curl 'https://jsonplaceholder.typicode.com/posts' --data-binary '{"title":"foo","body":"bar","userId":1}'`),
 				},
 				{
 					Name:    "ListPosts",
@@ -27,8 +26,9 @@ func main() {
 					Request: curl.ParseCommand(`curl https://jsonplaceholder.typicode.com/posts?id=1`),
 				},
 				{
-					Name:    "UpdatePost",
-					Request: curl.ParseCommand(`curl 'https://jsonplaceholder.typicode.com/posts' --data-binary '{"title":"foo","body":"bar","userId":1}'`),
+					Name:      "UpdatePost",
+					Request:   curl.ParseCommand(`curl 'https://jsonplaceholder.typicode.com/posts/1' -X 'PUT' --data-binary '{"title":"foo","body":"bar","userId":1}'`),
+					ParamHint: "/posts/{postID}",
 				},
 				{
 					Name:      "DeletePost",

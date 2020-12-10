@@ -11,11 +11,10 @@ import (
 func ExampleGenerate() {
 	def := &apigen.Definition{
 		Services: map[string][]*apigen.Method{
-			"Dummy": []*apigen.Method{
+			"Dummy": {
 				{
-					Name:      "CreatePost",
-					Request:   curl.ParseCommand(`curl 'https://jsonplaceholder.typicode.com/posts/1' --data-binary '{"title":"foo","body":"bar","userId":1}'`),
-					ParamHint: "/posts/{postID}",
+					Name:    "CreatePost",
+					Request: curl.ParseCommand(`curl 'https://jsonplaceholder.typicode.com/posts' --data-binary '{"title":"foo","body":"bar","userId":1}'`),
 				},
 				{
 					Name:    "GetPost",
@@ -25,6 +24,11 @@ func ExampleGenerate() {
 					Name:      "ListComments",
 					Request:   curl.ParseCommand(`curl https://jsonplaceholder.typicode.com/posts/1/comments`),
 					ParamHint: "/posts/{postID}/comments",
+				},
+				{
+					Name:      "UpdatePost",
+					Request:   curl.ParseCommand(`curl 'https://jsonplaceholder.typicode.com/posts/1' -X 'PUT' --data-binary '{"title":"foo","body":"bar","userId":1}'`),
+					ParamHint: "/posts/{postID}",
 				},
 			},
 		},
@@ -50,6 +54,7 @@ func ExampleGenerate() {
 	// 	CreatePost(ctx context.Context, req *CreatePostRequest) (*CreatePostResponse, error)
 	// 	GetPost(ctx context.Context, req *GetPostRequest) (*GetPostResponse, error)
 	// 	ListComments(ctx context.Context, req *ListCommentsRequest) (*ListCommentsResponse, error)
+	// 	UpdatePost(ctx context.Context, req *UpdatePostRequest) (*UpdatePostResponse, error)
 	// }
 	//
 	// type dummyClient struct {
@@ -61,7 +66,7 @@ func ExampleGenerate() {
 	// }
 	//
 	// func (c *dummyClient) CreatePost(ctx context.Context, req *CreatePostRequest) (*CreatePostResponse, error) {
-	// 	u, err := url.Parse(fmt.Sprintf("https://jsonplaceholder.typicode.com/posts/%s", req.PostID))
+	// 	u, err := url.Parse("https://jsonplaceholder.typicode.com/posts")
 	// 	if err != nil {
 	// 		return nil, err
 	// 	}
@@ -99,9 +104,19 @@ func ExampleGenerate() {
 	// 	return &res, err
 	// }
 	//
+	// func (c *dummyClient) UpdatePost(ctx context.Context, req *UpdatePostRequest) (*UpdatePostResponse, error) {
+	// 	u, err := url.Parse(fmt.Sprintf("https://jsonplaceholder.typicode.com/posts/%s", req.PostID))
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	//
+	// 	var res UpdatePostResponse
+	// 	err = c.Do(ctx, "PUT", u, req.Body, &res)
+	// 	return &res, err
+	// }
+	//
 	// type CreatePostRequest struct {
-	// 	PostID string
-	// 	Body   *CreatePostRequestBody
+	// 	Body *CreatePostRequestBody
 	// }
 	//
 	// type CreatePostRequestBody struct {
@@ -110,7 +125,9 @@ func ExampleGenerate() {
 	// 	UserID float64 `json:"userId,omitempty"`
 	// }
 	//
-	// type CreatePostResponse struct{}
+	// type CreatePostResponse struct {
+	// 	ID float64 `json:"id,omitempty"`
+	// }
 	//
 	// type GetPostRequest struct {
 	// 	ID string
@@ -133,5 +150,20 @@ func ExampleGenerate() {
 	// 	ID     float64 `json:"id,omitempty"`
 	// 	Name   string  `json:"name,omitempty"`
 	// 	PostID float64 `json:"postId,omitempty"`
+	// }
+	//
+	// type UpdatePostRequest struct {
+	// 	PostID string
+	// 	Body   *UpdatePostRequestBody
+	// }
+	//
+	// type UpdatePostRequestBody struct {
+	// 	Body   string  `json:"body,omitempty"`
+	// 	Title  string  `json:"title,omitempty"`
+	// 	UserID float64 `json:"userId,omitempty"`
+	// }
+	//
+	// type UpdatePostResponse struct {
+	// 	ID float64 `json:"id,omitempty"`
 	// }
 }

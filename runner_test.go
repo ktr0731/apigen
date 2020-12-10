@@ -22,15 +22,10 @@ func TestGenerate(t *testing.T) {
 
 	def := &apigen.Definition{
 		Services: map[string][]*apigen.Method{
-			"Dummy": []*apigen.Method{
+			"Dummy": {
 				{
 					Name:    "CreatePost",
 					Request: curl.ParseCommand(`curl 'https://jsonplaceholder.typicode.com/posts' --data-binary '{"title":"foo","body":"bar","userId":1}'`),
-				},
-				{
-					Name:      "UpdatePost",
-					Request:   curl.ParseCommand(`curl 'https://jsonplaceholder.typicode.com/posts/1' -X 'PUT' --data-binary '{"title":"foo","body":"bar","userId":1}'`),
-					ParamHint: "/posts/{postID}",
 				},
 				{
 					Name:    "ListPosts",
@@ -44,6 +39,11 @@ func TestGenerate(t *testing.T) {
 					Name:      "ListComments",
 					Request:   curl.ParseCommand(`curl https://jsonplaceholder.typicode.com/posts/1/comments`),
 					ParamHint: "/posts/{postID}/comments",
+				},
+				{
+					Name:      "UpdatePost",
+					Request:   curl.ParseCommand(`curl 'https://jsonplaceholder.typicode.com/posts/1' -X 'PUT' --data-binary '{"title":"foo","body":"bar","userId":1}'`),
+					ParamHint: "/posts/{postID}",
 				},
 				{
 					Name:      "DeletePost",

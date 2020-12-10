@@ -28,7 +28,7 @@ func NewDummyClient(opts ...client.Option) DummyClient {
 }
 
 func (c *dummyClient) CreatePost(ctx context.Context, req *CreatePostRequest) (*CreatePostResponse, error) {
-	u, err := url.Parse(fmt.Sprintf("https://jsonplaceholder.typicode.com/posts/%s", req.PostID))
+	u, err := url.Parse("https://jsonplaceholder.typicode.com/posts")
 	if err != nil {
 		return nil, err
 	}
@@ -78,19 +78,18 @@ func (c *dummyClient) ListPosts(ctx context.Context, req *ListPostsRequest) (*Li
 }
 
 func (c *dummyClient) UpdatePost(ctx context.Context, req *UpdatePostRequest) (*UpdatePostResponse, error) {
-	u, err := url.Parse("https://jsonplaceholder.typicode.com/posts")
+	u, err := url.Parse(fmt.Sprintf("https://jsonplaceholder.typicode.com/posts/%s", req.PostID))
 	if err != nil {
 		return nil, err
 	}
 
 	var res UpdatePostResponse
-	err = c.Do(ctx, "POST", u, req.Body, &res)
+	err = c.Do(ctx, "PUT", u, req.Body, &res)
 	return &res, err
 }
 
 type CreatePostRequest struct {
-	PostID string
-	Body   *CreatePostRequestBody
+	Body *CreatePostRequestBody
 }
 
 type CreatePostRequestBody struct {
@@ -99,7 +98,9 @@ type CreatePostRequestBody struct {
 	UserID float64 `json:"userId,omitempty"`
 }
 
-type CreatePostResponse struct{}
+type CreatePostResponse struct {
+	ID float64 `json:"id,omitempty"`
+}
 
 type DeletePostRequest struct {
 	PostID string
@@ -128,7 +129,8 @@ type ListPostsResponse []struct {
 }
 
 type UpdatePostRequest struct {
-	Body *UpdatePostRequestBody
+	PostID string
+	Body   *UpdatePostRequestBody
 }
 
 type UpdatePostRequestBody struct {
