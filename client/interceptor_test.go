@@ -41,6 +41,7 @@ func TestConvertStatusCodeToErrorInterceptor(t *testing.T) {
 				if res == nil {
 					t.Errorf("res should not be nil")
 				}
+
 				return
 			}
 

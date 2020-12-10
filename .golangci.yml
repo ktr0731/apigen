@@ -59,3 +59,4 @@ issues:
     - path: _test\.go
       linters:
         - maligned
+        - bodyclose
