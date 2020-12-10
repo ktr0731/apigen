@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 )
 
@@ -19,5 +20,26 @@ func HeaderInterceptor(h http.Header) Interceptor {
 		}
 
 		return handler(ctx, req)
+	}
+}
+
+type Error struct{ StatusCode int }
+
+func (e *Error) Error() string {
+	return fmt.Sprintf("code %d", e.StatusCode)
+}
+
+func ConvertStatusCodeToErrorInterceptor() Interceptor {
+	return func(ctx context.Context, req *http.Request, handler Handler) (*http.Response, error) {
+		res, err := handler(ctx, req)
+		if err != nil {
+			return res, err
+		}
+
+		if res.StatusCode/100 != 2 {
+			return nil, &Error{StatusCode: res.StatusCode}
+		}
+
+		return res, err
 	}
 }
