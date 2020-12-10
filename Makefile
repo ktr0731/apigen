@@ -25,3 +25,7 @@ gotest: lint
 .PHONY: lint
 lint:
 	golangci-lint run ./...
+
+.PHONY:
+release:
+	goreleaser --rm-dist
