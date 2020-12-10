@@ -1,6 +1,7 @@
 # apigen
 
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/ktr0731/apigen)](https://pkg.go.dev/github.com/ktr0731/apigen)
+[![GitHub Actions](https://github.com/ktr0731/apigen/workflows/main/badge.svg)](https://github.com/ktr0731/apigen/actions)  
 
 `apigen` generates API client via execution environment such as `curl`.
 
