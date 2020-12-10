@@ -9,7 +9,6 @@ import (
 	"sync"
 
 	"github.com/iancoleman/strcase"
-	"github.com/morikuni/failure"
 	"golang.org/x/tools/imports"
 )
 
@@ -146,7 +145,7 @@ func (g *generator) generate(pkg string) error {
 
 	out, err := g.gen()
 	if err != nil {
-		return failure.Wrap(err)
+		return err
 	}
 
 	b, err := imports.Process("", []byte(out), &imports.Options{
@@ -156,11 +155,11 @@ func (g *generator) generate(pkg string) error {
 		TabWidth:  8,
 	})
 	if err != nil {
-		return failure.Wrap(err)
+		return fmt.Errorf("format failed, err = '%s', %w", err, ErrInternal)
 	}
 
 	if _, err := g.writer.Write(b); err != nil {
-		return failure.Wrap(err)
+		return fmt.Errorf("failed to write formatted result: %w", err)
 	}
 
 	return nil

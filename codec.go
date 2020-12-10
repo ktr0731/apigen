@@ -7,8 +7,6 @@ import (
 	"net/url"
 	"sort"
 	"strings"
-
-	"github.com/morikuni/failure"
 )
 
 type jsonType int
@@ -31,7 +29,7 @@ type jsonDecoder struct{}
 func (d *jsonDecoder) Decode(r io.Reader) (_type, error) {
 	var v interface{}
 	if err := json.NewDecoder(r).Decode(&v); err != nil {
-		return nil, failure.Wrap(err)
+		return nil, err
 	}
 
 	switch v := v.(type) {

@@ -10,7 +10,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/morikuni/failure"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -43,7 +42,7 @@ func newRunner(opts ...Option) *runner {
 
 func (r *runner) run(ctx context.Context, def *Definition) error {
 	if err := def.validate(); err != nil {
-		return failure.Wrap(err)
+		return fmt.Errorf("validation failed: %w", err)
 	}
 
 	eg, cctx := errgroup.WithContext(ctx)
@@ -66,7 +65,7 @@ func (r *runner) processService(ctx context.Context, service string, methods []*
 	for _, m := range methods {
 		req, err := m.Request(cctx)
 		if err != nil {
-			return failure.Wrap(err)
+			return fmt.Errorf("failed to instantiate a new request: %w", err)
 		}
 
 		m := m
@@ -80,13 +79,13 @@ func (r *runner) processService(ctx context.Context, service string, methods []*
 
 			res, err := r.client.Do(req)
 			if err != nil {
-				return failure.Wrap(err)
+				return fmt.Errorf("failed to call API: %w", err)
 			}
 			defer res.Body.Close()
 
 			methRes, err := r.decoder.Decode(res.Body)
 			if err != nil {
-				return failure.Wrap(err)
+				return fmt.Errorf("failed to decode response body: %w", err)
 			}
 
 			var methReq request
@@ -102,11 +101,11 @@ func (r *runner) processService(ctx context.Context, service string, methods []*
 				if req.GetBody != nil {
 					b, err := req.GetBody()
 					if err != nil {
-						return failure.Wrap(err)
+						return fmt.Errorf("failed to get request body: %w", err)
 					}
 					req, err := r.decoder.Decode(b)
 					if err != nil {
-						return failure.Wrap(err)
+						return fmt.Errorf("failed to decode request body: %w", err)
 					}
 
 					methReq.body = &structType{

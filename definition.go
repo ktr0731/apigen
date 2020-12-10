@@ -34,6 +34,7 @@ func (d *Definition) validate() error {
 }
 
 // RequestFunc defines a function which instantiates a new *http.Request.
+// RequestFunc may return errors wrapping a pre-defined error in apigen.
 type RequestFunc func(context.Context) (*http.Request, error)
 
 // Method defines an API method.
