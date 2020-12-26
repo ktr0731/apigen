@@ -5,10 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+
+	"github.com/ktr0731/apigen/client"
 )
 
 func main() {
-	client := NewDummyClient()
+	client := NewDummyClient(client.WithInterceptors(client.ConvertStatusCodeToErrorInterceptor()))
 
 	res, err := client.GetPost(context.Background(), &GetPostRequest{ID: "10"})
 	if err != nil {
