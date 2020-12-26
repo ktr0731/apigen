@@ -23,7 +23,7 @@ If possible, please provide a Docker image for reproducing the error.
 ## Environment
 - OS: 
 - Terminal: 
-- go-fuzzyfinder version: 
+- Module version: 
 
 ## Additional context
 <!-- Add any other context about the problem here. -->
