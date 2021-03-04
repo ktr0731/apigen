@@ -5,7 +5,7 @@ go 1.14
 require (
 	github.com/achiku/varfmt v0.0.0-20160708124000-f820e1efecee
 	github.com/golangci/golangci-lint v1.38.0
-	github.com/google/go-cmp v0.5.4
+	github.com/google/go-cmp v0.5.5
 	github.com/goreleaser/goreleaser v0.158.0
 	github.com/iancoleman/strcase v0.1.3
 	github.com/mattn/go-shellwords v1.0.11
