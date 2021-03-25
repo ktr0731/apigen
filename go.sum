@@ -397,6 +397,7 @@ github.com/goreleaser/goreleaser v0.159.0 h1:GweZjp8TaRhO14d3sQkGWJqB/LCEF1lYtMT
 github.com/goreleaser/goreleaser v0.159.0/go.mod h1:aK3Vr09RwhDZQUqCu4AC3amjy3648q+caVpzIA9TV/g=
 github.com/goreleaser/goreleaser v0.160.0/go.mod h1:e47OkiYvqf+Npm716l1zSkzAvdHfNdP4xeOCXnpmivI=
 github.com/goreleaser/goreleaser v0.161.0/go.mod h1:veE2EfKbO4huo3T8nOZ6PJk8gagS9sUv1a0dz+w1FJo=
+github.com/goreleaser/goreleaser v0.161.1/go.mod h1:veE2EfKbO4huo3T8nOZ6PJk8gagS9sUv1a0dz+w1FJo=
 github.com/goreleaser/nfpm/v2 v2.3.1 h1:WcG8g14PoOslqlxsZqu4Zse6P6c0G8gy8YvIjO561f8=
 github.com/goreleaser/nfpm/v2 v2.3.1/go.mod h1:jyT97Csl87+kXNr8xc1fDcRGcI/ulxQIz5MdqC2Vrro=
 github.com/gorilla/websocket v1.4.1/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
