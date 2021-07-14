@@ -12,5 +12,5 @@ require (
 	github.com/mattn/go-shellwords v1.0.12
 	github.com/spf13/pflag v1.0.5
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
-	golang.org/x/tools v0.1.4
+	golang.org/x/tools v0.1.5
 )
