@@ -44,8 +44,8 @@ type Method struct {
 	// Request instantiates a new *http.Request. See examples for details.
 	Request RequestFunc
 	// ParamHint specifies path parameters.
-	// These will be organized as the request fields. Each parameter must be start with ":".
-	// For example, "/posts/:postID" is given as a ParamHint, apigen generates the following request type:
+	// These will be organized as the request fields. Each parameter must be surrounded by "{}".
+	// For example, "/posts/{postID}" is given as a ParamHint, apigen generates the following request type:
 	//
 	//  type Request struct {
 	//    PostID string
