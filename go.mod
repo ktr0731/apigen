@@ -3,9 +3,10 @@ module github.com/ktr0731/apigen
 go 1.14
 
 require (
+	cloud.google.com/go/kms v1.1.0 // indirect
 	github.com/Songmu/gocredits v0.2.0
 	github.com/achiku/varfmt v0.0.0-20160708124000-f820e1efecee
-	github.com/golangci/golangci-lint v1.42.0
+	github.com/golangci/golangci-lint v1.43.0
 	github.com/google/go-cmp v0.5.6
 	github.com/goreleaser/goreleaser v0.176.0
 	github.com/iancoleman/strcase v0.2.0
