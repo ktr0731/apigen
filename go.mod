@@ -6,12 +6,12 @@ require (
 	github.com/ProtonMail/go-crypto v0.0.0-20211112122917-428f8eabeeb3 // indirect
 	github.com/Songmu/gocredits v0.2.0
 	github.com/achiku/varfmt v0.0.0-20160708124000-f820e1efecee
-	github.com/golangci/golangci-lint v1.44.0
+	github.com/golangci/golangci-lint v1.44.1
 	github.com/google/go-cmp v0.5.7
 	github.com/goreleaser/goreleaser v1.5.0
 	github.com/iancoleman/strcase v0.2.0
 	github.com/mattn/go-shellwords v1.0.12
 	github.com/spf13/pflag v1.0.5
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
-	golang.org/x/tools v0.1.9-0.20211228192929-ee1ca4ffc4da
+	golang.org/x/tools v0.1.9
 )
