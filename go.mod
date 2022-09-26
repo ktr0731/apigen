@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20211112122917-428f8eabeeb3 // indirect
-	github.com/Songmu/gocredits v0.2.0
+	github.com/Songmu/gocredits v0.3.0
 	github.com/achiku/varfmt v0.0.0-20160708124000-f820e1efecee
 	github.com/golangci/golangci-lint v1.45.2
 	github.com/google/go-cmp v0.5.7
